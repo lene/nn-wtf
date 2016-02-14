@@ -1,5 +1,6 @@
 .idea
 dir.sh
+__pycache__
 
 # if tensorflow source is downloaded in this directory, ignore it
 tensorflow
