@@ -77,13 +77,13 @@ def read_csv(file_name):
     reader = tf.TextLineReader(skip_header_lines=1)
     filename_queue = tf.train.string_input_producer([file_name])
     key, value = reader.read(filename_queue)
-    #                  id,   date, price,bedrooms,bathrooms,sqft_living,sqft_lot,floors,waterfront,view,condition,grade,sqft_above,sqft_basement,yr_built,yr_renovated,zipcode,lat,long,sqft_living15,sqft_lot15
     record_defaults = [[1.], [1.], [1.]]
 
     col1, col2, col3 = tf.decode_csv(value, record_defaults=record_defaults)
     print_tensors([col1, col2, col3])
 
-    features = col2 # tf.concat(0, [col1, col2])
+    # features = tf.concat(0, [col1, col2])
+    features = tf.pack([col1, col2])
     print_tensor(features)
 
     with tf.Session() as sess:
