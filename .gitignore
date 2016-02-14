@@ -1,2 +1,5 @@
 .idea
 dir.sh
+
+# if tensorflow source is downloaded in this directory, ignore it
+tensorflow
