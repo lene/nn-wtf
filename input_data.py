@@ -23,7 +23,6 @@ import os
 
 import numpy
 from six.moves import urllib
-from six.moves import xrange  # pylint: disable=redefined-builtin
 
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 

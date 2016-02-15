@@ -1,8 +1,8 @@
-from tutorials import mnist
+import time
 
 import tensorflow as tf
 
-import time
+import mnist
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 
