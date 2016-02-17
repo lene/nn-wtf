@@ -18,13 +18,15 @@ IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 class MNISTGraph:
 
     def __init__(
-            self,
-            learning_rate=0.01, hidden1=128, hidden2=32, batch_size=100, train_dir='data'
+            self, verbose = False,
+            learning_rate=0.01, hidden1=128, hidden2=32, hidden3=None, batch_size=100, train_dir='data'
     ):
         # self.flags = flags
+        self.verbose = verbose
         self.learning_rate = learning_rate
-        self.hidden1 = hidden1
-        self.hidden2 = hidden2
+        self.hidden = (hidden1, hidden2)
+        if hidden3:
+            self.hidden += (hidden3,)
         self.batch_size = batch_size
         self.train_dir = train_dir
         self.fake_data = False
@@ -107,7 +109,8 @@ class MNISTGraph:
 
     def write_summary(self, duration, feed_dict, loss_value, sess, step):
         # Print status to stdout.
-        print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
+        if self.verbose:
+            print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
         # Update the events file.
         summary_str = sess.run(self.summary_op, feed_dict=feed_dict)
         self.summary_writer.add_summary(summary_str, step)
@@ -135,7 +138,7 @@ class MNISTGraph:
         self.images_placeholder, self.labels_placeholder = placeholder_inputs(self.batch_size)
 
         self.graph = NeuralNetworkGraph(
-            self.images_placeholder.get_shape()[1], (self.hidden1, self.hidden2), NUM_CLASSES
+            self.images_placeholder.get_shape()[1], self.hidden, NUM_CLASSES
         )
 
         # Build a Graph that computes predictions from the inference model.

@@ -20,7 +20,7 @@ import tensorflow as tf
 
 import input_data
 from mnist_graph import MNISTGraph
-
+import time
 
 # Basic model parameters as external flags.
 flags = tf.app.flags
@@ -38,14 +38,25 @@ def run_training():
     """Train MNIST for a number of steps."""
     # Get the sets of images and labels for training, validation, and test on MNIST.
     data_sets = input_data.read_data_sets(FLAGS.train_dir, FLAGS.fake_data)
+    for i in (1, 2, 3, 4):
+        start_time = time.time()
+        # Tell TensorFlow that the model will be built into the default Graph.
+        with tf.Graph().as_default():
+            graph = MNISTGraph(
+                learning_rate=FLAGS.learning_rate, hidden1=FLAGS.hidden1//2*i,
+                hidden2=FLAGS.hidden2//2*i, batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
+            )
+            graph.train(data_sets, FLAGS.max_steps)
+        print(FLAGS.hidden1//2*i, FLAGS.hidden2//2*i, time.time()-start_time)
 
-    # Tell TensorFlow that the model will be built into the default Graph.
+    start_time = time.time()
     with tf.Graph().as_default():
         graph = MNISTGraph(
             learning_rate=FLAGS.learning_rate, hidden1=FLAGS.hidden1,
-            hidden2=FLAGS.hidden2, batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
+            hidden2=FLAGS.hidden1, hidden3=FLAGS.hidden2, batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
         )
         graph.train(data_sets, FLAGS.max_steps)
+    print(FLAGS.hidden1, FLAGS.hidden1, FLAGS.hidden2, time.time()-start_time)
 
 
 def main(_):
