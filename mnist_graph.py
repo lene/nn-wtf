@@ -1,43 +1,38 @@
 import time
+import math
 
 import tensorflow as tf
 
 import mnist
+from mnist import NUM_CLASSES
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 
 
 class MNISTGraph:
 
-    def __init__(self, flags):
-        self.flags = flags
+    def __init__(
+            self,
+            learning_rate=0.01, max_steps=2000, hidden1=128, hidden2=32,
+            batch_size=100, train_dir='data'
+    ):
+        # self.flags = flags
+        self.learning_rate = learning_rate
+        self.max_steps = max_steps
+        self.hidden1 = hidden1
+        self.hidden2 = hidden2
+        self.batch_size = batch_size
+        self.train_dir = train_dir
+        self.fake_data = False
+
         self._build_graph()
         self._setup_summaries()
-
-    def _build_graph(self):
-        # Generate placeholders for the images and labels.
-        self.images_placeholder, self.labels_placeholder = placeholder_inputs(self.flags.batch_size)
-        # Build a Graph that computes predictions from the inference model.
-        self.logits = mnist.inference(self.images_placeholder, self.flags.hidden1, self.flags.hidden2)
-        # Add to the Graph the Ops for loss calculation.
-        self.loss = mnist.loss(self.logits, self.labels_placeholder)
-        # Add to the Graph the Ops that calculate and apply gradients.
-        self.train_op = mnist.training(self.loss, self.flags.learning_rate)
-        # Add the Op to compare the logits to the labels during evaluation.
-        self.eval_correct = mnist.evaluation(self.logits, self.labels_placeholder)
-
-    def _setup_summaries(self):
-        # Build the summary operation based on the TF collection of Summaries.
-        self.summary_op = tf.merge_all_summaries()
-        # Create a saver for writing training checkpoints.
-        self.saver = tf.train.Saver()
-        self.summary_writer = None
 
     def run_training_graph(self, data_sets):
         session = self.initialize_session()
 
         # And then after everything is built, start the training loop.
-        for step in range(self.flags.max_steps):
+        for step in range(self.max_steps):
             start_time = time.time()
 
             # Fill a feed dictionary with the actual set of images and labels for this particular
@@ -57,8 +52,8 @@ class MNISTGraph:
                 self.write_summary(duration, feed_dict, loss_value, session, step)
 
             # Save a checkpoint and evaluate the model periodically.
-            if (step + 1) % 1000 == 0 or (step + 1) == self.flags.max_steps:
-                self.saver.save(session, self.flags.train_dir, global_step=step)
+            if (step + 1) % 1000 == 0 or (step + 1) == self.max_steps:
+                self.saver.save(session, self.train_dir, global_step=step)
                 self.print_evaluations(data_sets, session)
 
     def print_evaluations(self, data_sets, session):
@@ -79,7 +74,7 @@ class MNISTGraph:
         init = tf.initialize_all_variables()
         sess.run(init)
         # Instantiate a SummaryWriter to output summaries and the Graph.
-        self.summary_writer = tf.train.SummaryWriter(self.flags.train_dir, graph_def=sess.graph_def)
+        self.summary_writer = tf.train.SummaryWriter(self.train_dir, graph_def=sess.graph_def)
         return sess
 
     def fill_feed_dict(self, data_set):
@@ -98,7 +93,7 @@ class MNISTGraph:
           feed_dict: The feed dictionary mapping from placeholders to values.
         """
         # Create the feed_dict for the placeholders filled with the next `batch size ` examples.
-        images_feed, labels_feed = data_set.next_batch(self.flags.batch_size, self.flags.fake_data)
+        images_feed, labels_feed = data_set.next_batch(self.batch_size, self.fake_data)
         feed_dict = {
             self.images_placeholder: images_feed,
             self.labels_placeholder: labels_feed,
@@ -121,14 +116,41 @@ class MNISTGraph:
             input_data.read_data_sets().
         """
         true_count = 0  # Counts the number of correct predictions.
-        steps_per_epoch = data_set.num_examples // self.flags.batch_size
-        num_examples = steps_per_epoch * self.flags.batch_size
+        steps_per_epoch = data_set.num_examples // self.batch_size
+        num_examples = steps_per_epoch * self.batch_size
         for _ in range(steps_per_epoch):
             feed_dict = self.fill_feed_dict(data_set)
             true_count += session.run(self.eval_correct, feed_dict=feed_dict)
         precision = true_count / num_examples
         print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
               (num_examples, true_count, precision))
+
+    def _build_graph(self):
+        # Generate placeholders for the images and labels.
+        self.images_placeholder, self.labels_placeholder = placeholder_inputs(self.batch_size)
+
+        # Build a Graph that computes predictions from the inference model.
+        self.logits = build_neural_network(
+            self.images_placeholder,
+            (self.hidden1, self.hidden2),
+            NUM_CLASSES
+        )
+
+        # Add to the Graph the Ops for loss calculation.
+        self.loss = mnist.loss(self.logits, self.labels_placeholder)
+
+        # Add to the Graph the Ops that calculate and apply gradients.
+        self.train_op = mnist.training(self.loss, self.learning_rate)
+
+        # Add the Op to compare the logits to the labels during evaluation.
+        self.eval_correct = mnist.evaluation(self.logits, self.labels_placeholder)
+
+    def _setup_summaries(self):
+        # Build the summary operation based on the TF collection of Summaries.
+        self.summary_op = tf.merge_all_summaries()
+        # Create a saver for writing training checkpoints.
+        self.saver = tf.train.Saver()
+        self.summary_writer = None
 
 
 def placeholder_inputs(batch_size):
@@ -144,11 +166,50 @@ def placeholder_inputs(batch_size):
     images_placeholder: Images placeholder.
     labels_placeholder: Labels placeholder.
   """
-  # Note that the shapes of the placeholders match the shapes of the full
-  # image and label tensors, except the first dimension is now batch_size
-  # rather than the full size of the train or test data sets.
+  # Note that the shapes of the placeholders match the shapes of the full image and label
+  # tensors, except the first dimension is now batch_size rather than the full size of
+  # the train or test data sets.
   images_placeholder = tf.placeholder(tf.float32, shape=(batch_size,
                                                          mnist.IMAGE_PIXELS))
   labels_placeholder = tf.placeholder(tf.int32, shape=batch_size)
   return images_placeholder, labels_placeholder
+
+
+def build_neural_network(images, hidden_layer_sizes, output_size):
+    """Build the MNIST model up to where it may be used for inference.
+
+    Args:
+      images: Images placeholder, from inputs().
+      hidden1_units: Size of the first hidden layer.
+      hidden2_units: Size of the second hidden layer.
+
+    Returns:
+      softmax_linear: Output tensor with the computed logits.
+    """
+    input_size = int(images.get_shape()[1])
+    # hidden1 = add_layer('hidden1', IMAGE_PIXELS, hidden_layer_sizes[0], images, tf.nn.relu)
+    hidden1 = add_layer('hidden1', input_size, hidden_layer_sizes[0], images, tf.nn.relu)
+    hidden2 = add_layer('hidden2', hidden_layer_sizes[0], hidden_layer_sizes[1], hidden1, tf.nn.relu)
+    logits = add_layer('softmax_linear', hidden_layer_sizes[1], output_size, hidden2)
+    return logits
+
+
+def add_layer(layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
+    with tf.name_scope(layer_name):
+        weights = initialize_weights(in_units_size, out_units_size)
+        biases = initialize_biases(out_units_size)
+        new_layer = function(tf.matmul(input_layer, weights) + biases)
+    return new_layer
+
+
+def initialize_weights(in_units_size, out_units_size):
+    return tf.Variable(
+        tf.truncated_normal([in_units_size, out_units_size], stddev=1.0 / math.sqrt(float(in_units_size))),
+        name='weights'
+    )
+
+
+def initialize_biases(out_units_size):
+    return tf.Variable(tf.zeros([out_units_size]), name='biases')
+
 

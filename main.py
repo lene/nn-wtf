@@ -32,14 +32,9 @@ flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
 flags.DEFINE_integer('max_steps', 2000, 'Number of steps to run trainer.')
 flags.DEFINE_integer('hidden1', 128, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden2', 32, 'Number of units in hidden layer 2.')
-flags.DEFINE_integer('batch_size', 100, 'Batch size.  '
-                     'Must divide evenly into the dataset sizes.')
+flags.DEFINE_integer('batch_size', 100, 'Batch size. Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', 'data', 'Directory to put the training data.')
-flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data '
-                     'for unit testing.')
-
-
-
+flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data for unit testing.')
 
 
 def run_training():
@@ -49,7 +44,10 @@ def run_training():
 
     # Tell TensorFlow that the model will be built into the default Graph.
     with tf.Graph().as_default():
-        graph = MNISTGraph(FLAGS)
+        graph = MNISTGraph(
+            learning_rate=FLAGS.learning_rate, max_steps=FLAGS.max_steps, hidden1=FLAGS.hidden1,
+            hidden2=FLAGS.hidden2, batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
+        )
         graph.run_training_graph(data_sets)
 
 

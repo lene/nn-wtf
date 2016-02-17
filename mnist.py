@@ -42,42 +42,6 @@ IMAGE_SIZE = 28
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
 
-def inference(images, hidden1_units, hidden2_units):
-    """Build the MNIST model up to where it may be used for inference.
-
-    Args:
-      images: Images placeholder, from inputs().
-      hidden1_units: Size of the first hidden layer.
-      hidden2_units: Size of the second hidden layer.
-
-    Returns:
-      softmax_linear: Output tensor with the computed logits.
-    """
-    hidden1 = add_layer('hidden1', IMAGE_PIXELS, hidden1_units, images, tf.nn.relu)
-    hidden2 = add_layer('hidden2', hidden1_units, hidden2_units, hidden1, tf.nn.relu)
-    logits = add_layer('softmax_linear', hidden2_units, NUM_CLASSES, hidden2)
-    return logits
-
-
-def add_layer(layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
-    with tf.name_scope(layer_name):
-        weights = initialize_weights(in_units_size, out_units_size)
-        biases = initialize_biases(out_units_size)
-        new_layer = function(tf.matmul(input_layer, weights) + biases)
-    return new_layer
-
-
-def initialize_weights(in_units_size, out_units_size):
-    return tf.Variable(
-        tf.truncated_normal([in_units_size, out_units_size], stddev=1.0 / math.sqrt(float(in_units_size))),
-        name='weights'
-    )
-
-
-def initialize_biases(out_units_size):
-    return tf.Variable(tf.zeros([out_units_size]), name='biases')
-
-
 def loss(logits, labels):
     """Calculates the loss from the logits and the labels.
 
