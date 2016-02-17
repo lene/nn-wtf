@@ -3,18 +3,23 @@ import math
 
 import tensorflow as tf
 
-import mnist
-from mnist import NUM_CLASSES
+from neural_network_graph import NeuralNetworkGraph
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 
+
+# The MNIST dataset has 10 classes, representing the digits 0 through 9.
+NUM_CLASSES = 10
+
+# The MNIST images are always 28x28 pixels.
+IMAGE_SIZE = 28
+IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
 class MNISTGraph:
 
     def __init__(
             self,
-            learning_rate=0.01, max_steps=2000, hidden1=128, hidden2=32,
-            batch_size=100, train_dir='data'
+            learning_rate=0.01, hidden1=128, hidden2=32, batch_size=100, train_dir='data'
     ):
         # self.flags = flags
         self.learning_rate = learning_rate
@@ -129,21 +134,23 @@ class MNISTGraph:
         # Generate placeholders for the images and labels.
         self.images_placeholder, self.labels_placeholder = placeholder_inputs(self.batch_size)
 
+        self.graph = NeuralNetworkGraph(
+            self.images_placeholder.get_shape()[1], (self.hidden1, self.hidden2), NUM_CLASSES
+        )
+
         # Build a Graph that computes predictions from the inference model.
-        self.logits = build_neural_network(
-            self.images_placeholder,
-            (self.hidden1, self.hidden2),
-            NUM_CLASSES
+        self.logits = self.graph.build_neural_network(
+            self.images_placeholder
         )
 
         # Add to the Graph the Ops for loss calculation.
-        self.loss = mnist.loss(self.logits, self.labels_placeholder)
+        self.loss = self.graph.loss(self.logits, self.labels_placeholder)
 
         # Add to the Graph the Ops that calculate and apply gradients.
-        self.train_op = mnist.training(self.loss, self.learning_rate)
+        self.train_op = self.graph.training(self.loss, self.learning_rate)
 
         # Add the Op to compare the logits to the labels during evaluation.
-        self.eval_correct = mnist.evaluation(self.logits, self.labels_placeholder)
+        self.eval_correct = self.graph.evaluation(self.logits, self.labels_placeholder)
 
     def _setup_summaries(self):
         # Build the summary operation based on the TF collection of Summaries.
@@ -169,47 +176,7 @@ def placeholder_inputs(batch_size):
   # Note that the shapes of the placeholders match the shapes of the full image and label
   # tensors, except the first dimension is now batch_size rather than the full size of
   # the train or test data sets.
-  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size,
-                                                         mnist.IMAGE_PIXELS))
+  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, IMAGE_PIXELS))
   labels_placeholder = tf.placeholder(tf.int32, shape=batch_size)
   return images_placeholder, labels_placeholder
-
-
-def build_neural_network(images, hidden_layer_sizes, output_size):
-    """Build the MNIST model up to where it may be used for inference.
-
-    Args:
-      images: Images placeholder, from inputs().
-      hidden1_units: Size of the first hidden layer.
-      hidden2_units: Size of the second hidden layer.
-
-    Returns:
-      softmax_linear: Output tensor with the computed logits.
-    """
-    input_size = int(images.get_shape()[1])
-    # hidden1 = add_layer('hidden1', IMAGE_PIXELS, hidden_layer_sizes[0], images, tf.nn.relu)
-    hidden1 = add_layer('hidden1', input_size, hidden_layer_sizes[0], images, tf.nn.relu)
-    hidden2 = add_layer('hidden2', hidden_layer_sizes[0], hidden_layer_sizes[1], hidden1, tf.nn.relu)
-    logits = add_layer('softmax_linear', hidden_layer_sizes[1], output_size, hidden2)
-    return logits
-
-
-def add_layer(layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
-    with tf.name_scope(layer_name):
-        weights = initialize_weights(in_units_size, out_units_size)
-        biases = initialize_biases(out_units_size)
-        new_layer = function(tf.matmul(input_layer, weights) + biases)
-    return new_layer
-
-
-def initialize_weights(in_units_size, out_units_size):
-    return tf.Variable(
-        tf.truncated_normal([in_units_size, out_units_size], stddev=1.0 / math.sqrt(float(in_units_size))),
-        name='weights'
-    )
-
-
-def initialize_biases(out_units_size):
-    return tf.Variable(tf.zeros([out_units_size]), name='biases')
-
 
