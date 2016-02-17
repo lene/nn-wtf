@@ -18,8 +18,8 @@ IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 class MNISTGraph:
 
     def __init__(
-            self, verbose = False,
-            learning_rate=0.01, hidden1=128, hidden2=32, hidden3=None, batch_size=100, train_dir='data'
+        self, verbose=True,
+        learning_rate=0.01, hidden1=128, hidden2=32, hidden3=None, batch_size=100, train_dir='data'
     ):
         # self.flags = flags
         self.verbose = verbose
@@ -34,12 +34,12 @@ class MNISTGraph:
         self._build_graph()
         self._setup_summaries()
 
-    def train(self, data_sets, max_steps):
+    def train(self, data_sets, max_steps, precision=None, steps_between_checks=100):
 
         session = self.initialize_session()
 
         # And then after everything is built, start the training loop.
-        for step in range(max_steps):
+        for self.step in range(max_steps):
             start_time = time.time()
 
             # Fill a feed dictionary with the actual set of images and labels for this particular
@@ -55,24 +55,31 @@ class MNISTGraph:
             duration = time.time() - start_time
 
             # Write the summaries and print an overview fairly often.
-            if step % 100 == 0:
-                self.write_summary(duration, feed_dict, loss_value, session, step)
+            if self.step % steps_between_checks == 0:
+                self.write_summary(duration, feed_dict, loss_value, session, self.step)
+                if precision is not None:
+                    self.do_eval(session, data_sets.test)
+                    if self.precision > precision:
+                        return
 
             # Save a checkpoint and evaluate the model periodically.
-            if (step + 1) % 1000 == 0 or (step + 1) == max_steps:
-                self.saver.save(session, self.train_dir, global_step=step)
+            if (self.step + 1) % 1000 == 0 or (self.step + 1) == max_steps:
+                self.saver.save(session, self.train_dir, global_step=self.step)
                 self.print_evaluations(data_sets, session)
 
     def print_evaluations(self, data_sets, session):
         # Evaluate against the training set.
-        print('Training Data Eval:')
-        self.do_eval(session, data_sets.train)
+        if self.verbose:
+            print('Training Data Eval:')
+        self.print_eval(session, data_sets.train)
         # Evaluate against the validation set.
-        print('Validation Data Eval:')
-        self.do_eval(session, data_sets.validation)
+        if self.verbose:
+            print('Validation Data Eval:')
+        self.print_eval(session, data_sets.validation)
         # Evaluate against the test set.
-        print('Test Data Eval:')
-        self.do_eval(session, data_sets.test)
+        if self.verbose:
+            print('Test Data Eval:')
+        self.print_eval(session, data_sets.test)
 
     def initialize_session(self):
         # Create a session for running Ops on the Graph.
@@ -123,15 +130,19 @@ class MNISTGraph:
           data_set: The set of images and labels to evaluate, from
             input_data.read_data_sets().
         """
-        true_count = 0  # Counts the number of correct predictions.
+        self.true_count = 0  # Counts the number of correct predictions.
         steps_per_epoch = data_set.num_examples // self.batch_size
-        num_examples = steps_per_epoch * self.batch_size
+        self.num_examples = steps_per_epoch * self.batch_size
         for _ in range(steps_per_epoch):
             feed_dict = self.fill_feed_dict(data_set)
-            true_count += session.run(self.eval_correct, feed_dict=feed_dict)
-        precision = true_count / num_examples
-        print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
-              (num_examples, true_count, precision))
+            self.true_count += session.run(self.eval_correct, feed_dict=feed_dict)
+        self.precision = self.true_count / self.num_examples
+
+    def print_eval(self, session, data_set):
+        self.do_eval(session, data_set)
+        if self.verbose:
+            print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
+                  (self.num_examples, self.true_count, self.precision))
 
     def _build_graph(self):
         # Generate placeholders for the images and labels.
