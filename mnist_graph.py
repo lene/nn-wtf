@@ -18,7 +18,6 @@ class MNISTGraph:
     ):
         # self.flags = flags
         self.learning_rate = learning_rate
-        self.max_steps = max_steps
         self.hidden1 = hidden1
         self.hidden2 = hidden2
         self.batch_size = batch_size
@@ -28,11 +27,12 @@ class MNISTGraph:
         self._build_graph()
         self._setup_summaries()
 
-    def run_training_graph(self, data_sets):
+    def train(self, data_sets, max_steps):
+
         session = self.initialize_session()
 
         # And then after everything is built, start the training loop.
-        for step in range(self.max_steps):
+        for step in range(max_steps):
             start_time = time.time()
 
             # Fill a feed dictionary with the actual set of images and labels for this particular
@@ -52,7 +52,7 @@ class MNISTGraph:
                 self.write_summary(duration, feed_dict, loss_value, session, step)
 
             # Save a checkpoint and evaluate the model periodically.
-            if (step + 1) % 1000 == 0 or (step + 1) == self.max_steps:
+            if (step + 1) % 1000 == 0 or (step + 1) == max_steps:
                 self.saver.save(session, self.train_dir, global_step=step)
                 self.print_evaluations(data_sets, session)
 

@@ -15,13 +15,10 @@
 
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow.examples.tutorials.mnist import input_data
+import input_data
 from mnist_graph import MNISTGraph
 
 
@@ -45,10 +42,10 @@ def run_training():
     # Tell TensorFlow that the model will be built into the default Graph.
     with tf.Graph().as_default():
         graph = MNISTGraph(
-            learning_rate=FLAGS.learning_rate, max_steps=FLAGS.max_steps, hidden1=FLAGS.hidden1,
+            learning_rate=FLAGS.learning_rate, hidden1=FLAGS.hidden1,
             hidden2=FLAGS.hidden2, batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
         )
-        graph.run_training_graph(data_sets)
+        graph.train(data_sets, FLAGS.max_steps)
 
 
 def main(_):

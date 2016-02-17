@@ -26,12 +26,6 @@ apply gradients.
 This file is used by the various "fully_connected_*.py" files and not meant to
 be run.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import math
-
 import tensorflow as tf
 
 # The MNIST dataset has 10 classes, representing the digits 0 through 9.
