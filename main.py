@@ -43,20 +43,27 @@ def run_training():
     data_sets = input_data.read_data_sets(FLAGS.train_dir, FLAGS.fake_data)
     best_geometry = brute_force_optimal_network_geometry(data_sets, FLAGS.training_precision)
     print(best_geometry)
-    start_time = time.time()
+
+    graph, timing_info = timed_run(run_final_training, best_geometry, data_sets)
+
+    print(timing_info, graph.precision, graph.step)
+
+
+def run_final_training(best_geometry, data_sets):
     with tf.Graph().as_default():
         graph = MNISTGraph(
             learning_rate=FLAGS.learning_rate,
             hidden1=best_geometry[3][0], hidden2=best_geometry[3][1], hidden3=best_geometry[3][2],
             batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
         )
-        graph.train(data_sets, FLAGS.max_steps, precision=FLAGS.desired_precision)
-        print(time.time()-start_time, graph.precision, graph.step)
+        graph.train(data_sets, FLAGS.max_steps, precision=FLAGS.desired_precision, steps_between_checks=250)
+    return graph
+
 
 def brute_force_optimal_network_geometry(data_sets, desired_precision, max_steps=10000):
     results = []
-    for layer1_size in (32, 64, 96, 128, 160):
-        for layer2_size in (32, 64, 96, 128, 160):
+    for layer1_size in (32, 64, 96, 128):
+        for layer2_size in (32, 64, 96, 128):
             if layer2_size > layer1_size:
                 continue
             for layer3_size in (None, 32):
@@ -68,13 +75,16 @@ def brute_force_optimal_network_geometry(data_sets, desired_precision, max_steps
                 print(run_info)
                 results.append(run_info)
 
-    results = sorted(results, key=lambda r: r[0])
+    results = sorted(results, key=lambda r: r[0]['cpu_time'])
     pprint.pprint(results)
     return results[0]
 
 
 def timed_run_training(data_sets, layer1_size, layer2_size, layer3_size, desired_precision=0.9, max_steps=10000):
-    start_time = time.time()
+    graph, timing = timed_run(run_training_once, data_sets, desired_precision, layer1_size, layer2_size, layer3_size, max_steps)
+    return timing, graph.precision, graph.step, (layer1_size, layer2_size, layer3_size)
+
+def run_training_once(data_sets, desired_precision, layer1_size, layer2_size, layer3_size, max_steps):
     # Tell TensorFlow that the model will be built into the default Graph.
     with tf.Graph().as_default():
         graph = MNISTGraph(
@@ -83,8 +93,14 @@ def timed_run_training(data_sets, layer1_size, layer2_size, layer3_size, desired
             verbose=False
         )
         graph.train(data_sets, max_steps, precision=desired_precision, steps_between_checks=50)
-    return time.time() - start_time, graph.precision, graph.step, (layer1_size, layer2_size, layer3_size)
+    return graph
 
+
+def timed_run(function, *args, **kwargs):
+    start_cpu_time, start_wall_time = time.process_time(), time.time()
+    returned = function(*args, **kwargs)
+    timing_info = {'cpu_time': time.process_time()-start_cpu_time, 'wall_time': time.time()-start_wall_time}
+    return returned, timing_info
 
 def main(_):
     run_training()
