@@ -16,18 +16,18 @@
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
 
-import tensorflow as tf
-
+from neural_network_optimizer import NeuralNetworkOptimizer, timed_run
 import input_data
 from mnist_graph import MNISTGraph
 
+import tensorflow as tf
+
 # Basic model parameters as external flags.
-from neural_network_optimizer import NeuralNetworkOptimizer, timed_run
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
-flags.DEFINE_float('training_precision', 0.9, 'Desired training precision.')
+flags.DEFINE_float('training_precision', 0.0, 'Precision for geometry optimization runs.')
 flags.DEFINE_float('desired_precision', 0.95, 'Desired training precision.')
 flags.DEFINE_integer('max_steps', 2000, 'Number of steps to run trainer.')
 flags.DEFINE_integer('hidden1', 128, 'Number of units in hidden layer 1.')
@@ -42,20 +42,32 @@ def run_training():
     # Get the sets of images and labels for training, validation, and test on MNIST.
     data_sets = input_data.read_data_sets(FLAGS.train_dir, FLAGS.fake_data)
 
-    optimizer = NeuralNetworkOptimizer(MNISTGraph, FLAGS, True)
-    best_geometry = optimizer.brute_force_optimal_network_geometry(data_sets, FLAGS.training_precision)
-    print(best_geometry)
+    geometry = get_network_geometry(data_sets)
 
-    graph, timing_info = timed_run(run_final_training, best_geometry, data_sets)
+    graph, cpu, wall = timed_run(run_final_training, geometry, data_sets)
 
-    print(timing_info, graph.precision, graph.step)
+    print(NeuralNetworkOptimizer.TimingInfo(cpu, wall, graph.precision, graph.step, geometry))
+
+    return graph
 
 
-def run_final_training(best_geometry, data_sets):
+def get_network_geometry(data_sets):
+    if FLAGS.training_precision:
+        optimizer = NeuralNetworkOptimizer(
+            MNISTGraph, FLAGS.training_precision, FLAGS.learning_rate, verbose=True
+        )
+        geometry = optimizer.brute_force_optimal_network_geometry(data_sets)
+        print('Best geometry found:', geometry)
+    else:
+        geometry = (FLAGS.hidden1, FLAGS.hidden2)
+    return geometry
+
+
+def run_final_training(geometry, data_sets):
     with tf.Graph().as_default():
         graph = MNISTGraph(
             learning_rate=FLAGS.learning_rate,
-            hidden1=best_geometry[3][0], hidden2=best_geometry[3][1], hidden3=best_geometry[3][2],
+            hidden1=geometry[0], hidden2=geometry[1], hidden3=geometry[2],
             batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
         )
         graph.train(data_sets, FLAGS.max_steps, precision=FLAGS.desired_precision, steps_between_checks=250)
@@ -63,7 +75,7 @@ def run_final_training(best_geometry, data_sets):
 
 
 def main(_):
-    run_training()
+    graph = run_training()
 
 
 if __name__ == '__main__':

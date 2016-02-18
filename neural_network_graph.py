@@ -99,10 +99,9 @@ class NeuralNetworkGraph:
           A scalar int32 tensor with the number of examples (out of batch_size)
           that were predicted correctly.
         """
-        # For a classifier model, we can use the in_top_k Op.
-        # It returns a bool tensor with shape [batch_size] that is true for
-        # the examples where the label's is was in the top k (here k=1)
-        # of all logits for that example.
+        # For a classifier model, we can use the in_top_k Op. It returns a bool
+        # tensor with shape [batch_size] that is true for the examples where the
+        # label's is was in the top k (here k=1) of all logits for that example.
         correct = tf.nn.in_top_k(logits, labels, 1)
         # Return the number of true entries.
         return tf.reduce_sum(tf.cast(correct, tf.int32))
