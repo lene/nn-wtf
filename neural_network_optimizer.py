@@ -26,10 +26,10 @@ class NeuralNetworkOptimizer:
         def __repr__(self):
             return str(self)
 
-    def __init__(self, tested_network, training_precision, learnning_rate=None, verbose=False):
+    def __init__(self, tested_network, training_precision, learning_rate=None, verbose=False):
         self.tested_network = tested_network
         self.verbose = verbose
-        self.learning_rate = learnning_rate if learnning_rate else self.DEFAULT_LEARNING_RATE
+        self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
         self.training_precision = training_precision
 
     def brute_force_optimal_network_geometry(self, data_sets, max_steps):
