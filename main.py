@@ -56,7 +56,7 @@ def get_network_geometry(data_sets):
         optimizer = NeuralNetworkOptimizer(
             MNISTGraph, FLAGS.training_precision, FLAGS.learning_rate, verbose=True
         )
-        geometry = optimizer.brute_force_optimal_network_geometry(data_sets)
+        geometry = optimizer.brute_force_optimal_network_geometry(data_sets, FLAGS.max_steps)
         print('Best geometry found:', geometry)
     else:
         geometry = (FLAGS.hidden1, FLAGS.hidden2)

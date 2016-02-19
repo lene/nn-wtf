@@ -32,7 +32,7 @@ class NeuralNetworkOptimizer:
         self.learning_rate = learnning_rate if learnning_rate else self.DEFAULT_LEARNING_RATE
         self.training_precision = training_precision
 
-    def brute_force_optimal_network_geometry(self, data_sets, max_steps=10000):
+    def brute_force_optimal_network_geometry(self, data_sets, max_steps):
         results = self.time_all_tested_geometries(data_sets, max_steps)
         return results[0].layers
 
