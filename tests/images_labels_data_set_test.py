@@ -15,7 +15,7 @@ BATCH_SIZE = 5
 class ImagesLabelsDataSetTest(unittest.TestCase):
 
     def test_init_without_fake_data_runs(self):
-        self._create_empty_data_set()
+        _create_empty_data_set()
 
     def test_init_with_fake_data_runs(self):
         images = create_minimal_input_placeholder()
@@ -33,7 +33,7 @@ class ImagesLabelsDataSetTest(unittest.TestCase):
             ImagesLabelsDataSet(images, images)
 
     def test_next_batch_returns_correct_data_format(self):
-        data_set = self._create_empty_data_set()
+        data_set = _create_empty_data_set()
         images, labels = data_set.next_batch(BATCH_SIZE)
         self.assertIsInstance(images, numpy.ndarray)
         self.assertEqual(2, len(images.shape))
@@ -43,10 +43,28 @@ class ImagesLabelsDataSetTest(unittest.TestCase):
         self.assertEqual(1, len(labels.shape))
         self.assertEqual(BATCH_SIZE, labels.shape[0])
 
-    def _create_empty_data_set(self):
-        images = create_empty_image_data()
-        labels = create_empty_label_data()
-        return ImagesLabelsDataSet(images, labels)
+    def test_next_batch_runs_repeatedly(self):
+        data_set = _create_empty_data_set()
+        batch_size = NUM_TRAINING_SAMPLES//2
+        _, _ = data_set.next_batch(batch_size)
+        _, _ = data_set.next_batch(batch_size)
+
+    def test_next_batch_sets_epochs_completed(self):
+        data_set = _create_empty_data_set()
+        batch_size = NUM_TRAINING_SAMPLES//2
+        self.assertEqual(0, data_set.epochs_completed)
+        _, _ = data_set.next_batch(batch_size)
+        self.assertEqual(0, data_set.epochs_completed)
+        _, _ = data_set.next_batch(batch_size)
+        self.assertEqual(0, data_set.epochs_completed)
+        _, _ = data_set.next_batch(batch_size)
+        self.assertEqual(1, data_set.epochs_completed)
+
+
+def _create_empty_data_set():
+    images = create_empty_image_data()
+    labels = create_empty_label_data()
+    return ImagesLabelsDataSet(images, labels)
 
 
 def create_empty_image_data():

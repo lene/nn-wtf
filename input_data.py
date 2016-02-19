@@ -55,10 +55,20 @@ def extract_images(filename):
     num_images = _read32(bytestream)
     rows = _read32(bytestream)
     cols = _read32(bytestream)
+    return images_from_bytestream(bytestream, rows, cols, num_images)
+
+
+def images_from_bytestream(bytestream, rows, cols, num_images):
     buf = bytestream.read(rows * cols * num_images)
     data = numpy.frombuffer(buf, dtype=numpy.uint8)
-    data = data.reshape(num_images, rows, cols, 1)
-    return data
+    return data.reshape(num_images, rows, cols, 1)
+
+
+def read_one_image_from_file(filename):
+    from mnist_graph import IMAGE_SIZE
+    with open(filename, 'rb') as bytestream:
+        rows, cols = IMAGE_SIZE, IMAGE_SIZE
+        return images_from_bytestream(bytestream, rows, cols, 1)
 
 
 def dense_to_one_hot(labels_dense, num_classes=10):
@@ -87,43 +97,49 @@ def extract_labels(filename, one_hot=False):
     return labels
 
 
+class DataSets:
 
-def read_data_sets(train_dir, fake_data=False, one_hot=False):
-  class DataSets(object):
-    pass
-  data_sets = DataSets()
+    def __init__(self, train, validation, test):
+        self.train = test
+        self.validation = validation
+        self.test = test
 
-  if fake_data:
-    data_sets.train = ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
-    data_sets.validation = ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
-    data_sets.test = ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
-    return data_sets
+TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
+TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
+TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
+TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
+VALIDATION_SIZE = 5000
 
-  TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
-  TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
-  TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
-  TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
-  VALIDATION_SIZE = 5000
 
-  local_file = maybe_download(TRAIN_IMAGES, train_dir)
-  train_images = extract_images(local_file)
+def read_data_sets(train_dir, one_hot=False):
 
-  local_file = maybe_download(TRAIN_LABELS, train_dir)
-  train_labels = extract_labels(local_file, one_hot=one_hot)
+    local_file = maybe_download(TRAIN_IMAGES, train_dir)
+    train_images = extract_images(local_file)
 
-  local_file = maybe_download(TEST_IMAGES, train_dir)
-  test_images = extract_images(local_file)
+    local_file = maybe_download(TRAIN_LABELS, train_dir)
+    train_labels = extract_labels(local_file, one_hot=one_hot)
 
-  local_file = maybe_download(TEST_LABELS, train_dir)
-  test_labels = extract_labels(local_file, one_hot=one_hot)
+    local_file = maybe_download(TEST_IMAGES, train_dir)
+    test_images = extract_images(local_file)
 
-  validation_images = train_images[:VALIDATION_SIZE]
-  validation_labels = train_labels[:VALIDATION_SIZE]
-  train_images = train_images[VALIDATION_SIZE:]
-  train_labels = train_labels[VALIDATION_SIZE:]
+    local_file = maybe_download(TEST_LABELS, train_dir)
+    test_labels = extract_labels(local_file, one_hot=one_hot)
 
-  data_sets.train = ImagesLabelsDataSet(train_images, train_labels)
-  data_sets.validation = ImagesLabelsDataSet(validation_images, validation_labels)
-  data_sets.test = ImagesLabelsDataSet(test_images, test_labels)
+    validation_images = train_images[:VALIDATION_SIZE]
+    validation_labels = train_labels[:VALIDATION_SIZE]
+    train_images = train_images[VALIDATION_SIZE:]
+    train_labels = train_labels[VALIDATION_SIZE:]
 
-  return data_sets
+    return DataSets(
+        ImagesLabelsDataSet(train_images, train_labels),
+        ImagesLabelsDataSet(validation_images, validation_labels),
+        ImagesLabelsDataSet(test_images, test_labels)
+    )
+
+
+def fake_data_sets(one_hot):
+    return DataSets(
+        ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot),
+        ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot),
+        ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
+    )

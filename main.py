@@ -41,7 +41,7 @@ flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data for unit testi
 def run_training():
     """Train MNIST for a number of steps."""
     # Get the sets of images and labels for training, validation, and test on MNIST.
-    data_sets = input_data.read_data_sets(FLAGS.train_dir, FLAGS.fake_data)
+    data_sets = input_data.fake_data_sets(False) if FLAGS.fake_data else input_data.read_data_sets(FLAGS.train_dir)
 
     geometry = get_network_geometry(data_sets)
 
@@ -61,6 +61,7 @@ def get_network_geometry(data_sets):
         print('Best geometry found:', geometry)
     else:
         geometry = (FLAGS.hidden1, FLAGS.hidden2, FLAGS.hidden3)
+
     return geometry
 
 
@@ -77,7 +78,8 @@ def run_final_training(geometry, data_sets):
 
 def main(_):
     graph = run_training()
-
+    one = input_data.read_one_image_from_file('data/1.raw')
+    # print(one)
 
 if __name__ == '__main__':
     tf.app.run()

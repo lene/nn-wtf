@@ -21,17 +21,24 @@ class ImagesLabelsDataSet:
 
             self._num_examples = images.shape[0]
 
-            # Convert shape from [num examples, rows, columns, depth]
-            # to [num examples, rows*columns]
+            # Convert shape from [num examples, rows, columns, depth] to [num examples, rows*columns]
             # TODO: assumes depth == 1
             images = images.reshape(images.shape[0], images.shape[1] * images.shape[2])
-            # Convert from [0, 255] -> [0.0, 1.0].
-            images = images.astype(numpy.float32)
-            images = numpy.multiply(images, 1.0 / 255.0)
+            images = self.normalize(images)
+
         self._images = images
         self._labels = labels
         self._epochs_completed = 0
         self._index_in_epoch = 0
+
+    def normalize(self, ndarray):
+        """Transform a ndarray that contains uint8 values to floats between 0. and 1.
+
+        :param ndarray:
+        :return:
+        """
+        ndarray = ndarray.astype(numpy.float32)
+        return numpy.multiply(ndarray, 1.0 / 255.0)
 
     @property
     def images(self):
@@ -63,16 +70,19 @@ class ImagesLabelsDataSet:
             # Finished epoch
             self._epochs_completed += 1
             # Shuffle the data
-            perm = numpy.arange(self._num_examples)
-            numpy.random.shuffle(perm)
-            self._images = self._images[perm]
-            self._labels = self._labels[perm]
+            self._shuffle_data()
             # Start next epoch
             start = 0
             self._index_in_epoch = batch_size
             assert batch_size <= self._num_examples
         end = self._index_in_epoch
         return self._images[start:end], self._labels[start:end]
+
+    def _shuffle_data(self):
+        perm = numpy.arange(self._num_examples)
+        numpy.random.shuffle(perm)
+        self._images = self._images[perm]
+        self._labels = self._labels[perm]
 
     def _fake_batch(self, batch_size):
       fake_image = [1] * 784
