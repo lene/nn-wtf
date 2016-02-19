@@ -21,7 +21,7 @@ import os
 import numpy
 from six.moves import urllib
 
-from data_set import DataSet
+from images_labels_data_set import ImagesLabelsDataSet
 
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 
@@ -94,9 +94,9 @@ def read_data_sets(train_dir, fake_data=False, one_hot=False):
   data_sets = DataSets()
 
   if fake_data:
-    data_sets.train = DataSet([], [], fake_data=True, one_hot=one_hot)
-    data_sets.validation = DataSet([], [], fake_data=True, one_hot=one_hot)
-    data_sets.test = DataSet([], [], fake_data=True, one_hot=one_hot)
+    data_sets.train = ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
+    data_sets.validation = ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
+    data_sets.test = ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
     return data_sets
 
   TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
@@ -122,11 +122,8 @@ def read_data_sets(train_dir, fake_data=False, one_hot=False):
   train_images = train_images[VALIDATION_SIZE:]
   train_labels = train_labels[VALIDATION_SIZE:]
 
-  print('train_images', train_images.shape)
-  print('train_labels', train_labels.shape)
-
-  data_sets.train = DataSet(train_images, train_labels)
-  data_sets.validation = DataSet(validation_images, validation_labels)
-  data_sets.test = DataSet(test_images, test_labels)
+  data_sets.train = ImagesLabelsDataSet(train_images, train_labels)
+  data_sets.validation = ImagesLabelsDataSet(validation_images, validation_labels)
+  data_sets.test = ImagesLabelsDataSet(test_images, test_labels)
 
   return data_sets
