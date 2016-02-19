@@ -34,7 +34,9 @@ class NeuralNetworkGraph:
           logits: Output tensor with the computed logits.
         """
 
+        assert isinstance(input, tf.Tensor)
         assert self.input_size == int(input.get_shape()[1])
+        assert self.layers == []
 
         self.layers.append(input)
         for i in range(1, self.num_hidden_layers+1):
@@ -45,6 +47,8 @@ class NeuralNetworkGraph:
             )
 
         logits = self._add_layer('output', self.layer_sizes[-1], self.output_size, self.layers[-1])
+
+        self.layers.append(logits)
 
         return logits
 
@@ -60,9 +64,9 @@ class NeuralNetworkGraph:
         """
         onehot_labels = self._convert_labels_to_onehot(labels)
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
-            logits, onehot_labels, name='xentropy'
+            logits, onehot_labels, name='cross_entropy'
         )
-        return tf.reduce_mean(cross_entropy, name='xentropy_mean')
+        return tf.reduce_mean(cross_entropy, name='cross_entropy_mean')
 
     def training(self, loss, learning_rate):
         """Sets up the training Ops.
