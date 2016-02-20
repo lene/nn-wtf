@@ -115,6 +115,30 @@ class NeuralNetworkGraph:
         # Return the number of true entries.
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
+    def predict(self, session, image):
+        logits = self.layers[-1]
+        image_data = image.reshape(784)
+        x = tf.placeholder(tf.float32, shape=[None, 784])
+        feed_dict={x: [image_data]}
+        prediction=tf.argmax(logits,1)
+        best = session.run([prediction],feed_dict)
+        print(best)
+        return best
+
+        x = tf.placeholder(tf.float32, shape=[None, 784])
+        y_ = tf.placeholder(tf.float32, shape=[None, 10])
+        W = tf.Variable(tf.zeros([784,10]))
+        b = tf.Variable(tf.zeros([10]))
+        session.run(tf.initialize_all_variables())
+        y = tf.nn.softmax(tf.matmul(x,W) + b)
+
+        image_data = image.reshape(784)
+        print(image_data)
+        classification = session.run(tf.argmax(y, 1), feed_dict={x: [image_data]})
+        print('y', y)
+        print('classification:', classification)
+        return classification[0]
+
     def _add_layer(self, layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
         with tf.name_scope(layer_name):
             weights = self._initialize_weights(in_units_size, out_units_size)

@@ -16,10 +16,12 @@
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
 
+from images_labels_data_set import ImagesLabelsDataSet
 from neural_network_optimizer import NeuralNetworkOptimizer, timed_run
 import input_data
 from mnist_graph import MNISTGraph
 
+import numpy
 import tensorflow as tf
 
 # Basic model parameters as external flags.
@@ -36,6 +38,7 @@ flags.DEFINE_integer('hidden3', None, 'Number of units in hidden layer 3.')
 flags.DEFINE_integer('batch_size', 100, 'Batch size. Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', 'data', 'Directory to put the training data.')
 flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data for unit testing.')
+flags.DEFINE_boolean('list_precisions', False, 'If true, call optimizer for several precisions.')
 
 
 def run_training():
@@ -66,20 +69,49 @@ def get_network_geometry(data_sets):
 
 
 def run_final_training(geometry, data_sets):
-    with tf.Graph().as_default():
-        graph = MNISTGraph(
+    graph = MNISTGraph(
             learning_rate=FLAGS.learning_rate,
             hidden1=geometry[0], hidden2=geometry[1], hidden3=geometry[2],
             batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
         )
-        graph.train(data_sets, FLAGS.max_steps, precision=FLAGS.desired_precision, steps_between_checks=250)
+    graph.train(data_sets, FLAGS.max_steps, precision=FLAGS.desired_precision, steps_between_checks=250)
     return graph
 
 
 def main(_):
-    graph = run_training()
-    one = input_data.read_one_image_from_file('data/1.raw')
-    # print(one)
+    if FLAGS.list_precisions:
+        iterate_over_precisions()
+    else:
+        with tf.Graph().as_default():
+            graph = run_training()
+            # one = input_data.read_one_image_from_file('data/1.raw')
+            # one_label = numpy.fromiter([1], dtype=numpy.uint8)
+            # data_set = ImagesLabelsDataSet.normalize(None, one)
+            # print(data_set)
+            #
+            # prediction = graph.predict(data_set)
+            # print('prediction for 1:', prediction)
+            # two = input_data.read_one_image_from_file('data/1.raw')
+            # one_label = numpy.fromiter([1], dtype=numpy.uint8)
+            # data_set = ImagesLabelsDataSet(one, one_label)
+            # print('prediction for 1:', graph.predict(one))
+
+
+def iterate_over_precisions():
+    data_sets = input_data.read_data_sets(FLAGS.train_dir)
+    final_results = {}
+    for precision in (0.5, 0.6, 0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99):
+        with tf.Graph().as_default():
+            optimizer = NeuralNetworkOptimizer(
+                MNISTGraph, precision, 0.1, verbose=True
+            )
+            results = optimizer.time_all_tested_geometries(data_sets, max(FLAGS.max_steps, 200000))
+            final_results[precision] = results
+    print(final_results)
+    import json
+    results_out = json.dumps(final_results)
+    with open("results.txt", "w") as text_file:
+        text_file.write(results_out)
 
 if __name__ == '__main__':
     tf.app.run()

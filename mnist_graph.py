@@ -36,7 +36,7 @@ class MNISTGraph:
 
     def train(self, data_sets, max_steps, precision=None, steps_between_checks=100):
 
-        session = self.initialize_session()
+        self.session = self.initialize_session()
 
         # And then after everything is built, start the training loop.
         for self.step in range(max_steps):
@@ -50,36 +50,32 @@ class MNISTGraph:
             # (which is discarded) and the `loss` Op. To inspect the values of your Ops or
             # variables, you may include them in the list passed to session.run() and the value
             # tensors will be returned in the tuple from the call.
-            _, loss_value = session.run([self.train_op, self.loss], feed_dict=feed_dict)
+            _, loss_value = self.session.run([self.train_op, self.loss], feed_dict=feed_dict)
 
             duration = time.time() - start_time
 
             # Write the summaries and print an overview fairly often.
             if self.step % steps_between_checks == 0:
-                self.write_summary(duration, feed_dict, loss_value, session, self.step)
+                self.write_summary(duration, feed_dict, loss_value, self.step)
                 if precision is not None:
-                    self.do_eval(session, data_sets.test)
+                    self.do_eval(data_sets.test)
                     if self.precision > precision:
                         return
 
             # Save a checkpoint and evaluate the model periodically.
             if (self.step + 1) % 1000 == 0 or (self.step + 1) == max_steps:
-                self.saver.save(session, self.train_dir, global_step=self.step)
-                self.print_evaluations(data_sets, session)
+                self.saver.save(self.session, self.train_dir, global_step=self.step)
+                self.print_evaluations(data_sets)
 
-    def print_evaluations(self, data_sets, session):
-        # Evaluate against the training set.
-        if self.verbose:
-            print('Training Data Eval:')
-        self.print_eval(session, data_sets.train)
-        # Evaluate against the validation set.
-        if self.verbose:
-            print('Validation Data Eval:')
-        self.print_eval(session, data_sets.validation)
-        # Evaluate against the test set.
-        if self.verbose:
-            print('Test Data Eval:')
-        self.print_eval(session, data_sets.test)
+    def print_evaluations(self, data_sets):
+        if self.verbose: print('Training Data Eval:')
+        self.print_eval(data_sets.train)
+
+        if self.verbose: print('Validation Data Eval:')
+        self.print_eval(data_sets.validation)
+
+        if self.verbose: print('Test Data Eval:')
+        self.print_eval(data_sets.test)
 
     def initialize_session(self):
         # Create a session for running Ops on the Graph.
@@ -114,15 +110,15 @@ class MNISTGraph:
         }
         return feed_dict
 
-    def write_summary(self, duration, feed_dict, loss_value, sess, step):
+    def write_summary(self, duration, feed_dict, loss_value, step):
         # Print status to stdout.
         if self.verbose:
             print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
         # Update the events file.
-        summary_str = sess.run(self.summary_op, feed_dict=feed_dict)
+        summary_str = self.session.run(self.summary_op, feed_dict=feed_dict)
         self.summary_writer.add_summary(summary_str, step)
 
-    def do_eval(self, session, data_set):
+    def do_eval(self, data_set):
         """Runs one evaluation against the full epoch of data.
 
         Args:
@@ -135,14 +131,22 @@ class MNISTGraph:
         self.num_examples = steps_per_epoch * self.batch_size
         for _ in range(steps_per_epoch):
             feed_dict = self.fill_feed_dict(data_set)
-            self.true_count += session.run(self.eval_correct, feed_dict=feed_dict)
+            self.true_count += self.session.run(self.eval_correct, feed_dict=feed_dict)
         self.precision = self.true_count / self.num_examples
 
-    def print_eval(self, session, data_set):
-        self.do_eval(session, data_set)
+    def print_eval(self, data_set):
+        self.do_eval(data_set)
         if self.verbose:
             print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
                   (self.num_examples, self.true_count, self.precision))
+
+    def evaluate_new_data_set(self, data_set):
+        self.batch_size = data_set.num_examples
+        self.num_examples = data_set.num_examples
+        self.print_eval(data_set)
+
+    def predict(self, image):
+        self.graph.predict(self.session, image)
 
     def _build_graph(self):
         # Generate placeholders for the images and labels.
