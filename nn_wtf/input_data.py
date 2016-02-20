@@ -21,7 +21,7 @@ import os
 import numpy
 from six.moves import urllib
 
-from images_labels_data_set import ImagesLabelsDataSet
+from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
 
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 

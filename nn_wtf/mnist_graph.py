@@ -3,7 +3,7 @@ import math
 
 import tensorflow as tf
 
-from neural_network_graph import NeuralNetworkGraph
+from nn_wtf.neural_network_graph import NeuralNetworkGraph
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 

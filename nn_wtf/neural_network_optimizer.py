@@ -24,7 +24,10 @@ class NeuralNetworkOptimizer:
             )
 
         def __repr__(self):
-            return str(self)
+            return str(self.__dict__())
+
+        def __dict__(self):
+            return {'cpu_time': self.cpu_time, 'step': self.step, 'layers': self.layers}
 
     def __init__(self, tested_network, training_precision, learning_rate=None, verbose=False):
         self.tested_network = tested_network
@@ -50,9 +53,12 @@ class NeuralNetworkOptimizer:
 
     def get_network_geometries(self):
         return ((l1, l2, l3)
-                for l1 in (32, 64, 96, 128)
-                for l2 in (32, 64, 96, 128) if l2 <= l1
-                for l3 in (None, 32))
+                for l1 in (32, 48, 64, 80, 96, 128) #, 160, 200)
+                # for l1 in (32, 64, 80, 96)
+                for l2 in (32, 48, 64, 80, 96, 128) if l2 <= l1
+                # for l2 in (32, 64) if l2 <= l1
+                for l3 in (16, 32, 48) if l3 <= l2)
+                # for l3 in (None, 16, 32, 48) if l3 is None or l3 <= l2)
 
     def brute_force_optimize_learning_rate(self):
         raise NotImplemented()

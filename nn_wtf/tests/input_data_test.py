@@ -12,7 +12,7 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 class InputDataTest(unittest.TestCase):
 
     def setUp(self):
-        self.data = read_one_image_from_file('data/0.raw')
+        self.data = read_one_image_from_file('nn_wtf/data/0.raw')
 
     def test_read_one_image_from_file(self):
         self.assertIsInstance(self.data, numpy.ndarray)

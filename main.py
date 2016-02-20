@@ -16,10 +16,10 @@
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
 
-from images_labels_data_set import ImagesLabelsDataSet
-from neural_network_optimizer import NeuralNetworkOptimizer, timed_run
-import input_data
-from mnist_graph import MNISTGraph
+from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
+from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
+import nn_wtf.input_data as id
+from nn_wtf.mnist_graph import MNISTGraph
 
 import numpy
 import tensorflow as tf
@@ -44,7 +44,7 @@ flags.DEFINE_boolean('list_precisions', False, 'If true, call optimizer for seve
 def run_training():
     """Train MNIST for a number of steps."""
     # Get the sets of images and labels for training, validation, and test on MNIST.
-    data_sets = input_data.fake_data_sets(False) if FLAGS.fake_data else input_data.read_data_sets(FLAGS.train_dir)
+    data_sets = id.fake_data_sets(False) if FLAGS.fake_data else id.read_data_sets(FLAGS.train_dir)
 
     geometry = get_network_geometry(data_sets)
 
@@ -96,22 +96,29 @@ def main(_):
             # data_set = ImagesLabelsDataSet(one, one_label)
             # print('prediction for 1:', graph.predict(one))
 
+import json
+class MyEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
 
 def iterate_over_precisions():
     data_sets = input_data.read_data_sets(FLAGS.train_dir)
     final_results = {}
-    for precision in (0.5, 0.6, 0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99):
+    # for precision in (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992):
+    for precision in (0.995,):
         with tf.Graph().as_default():
             optimizer = NeuralNetworkOptimizer(
                 MNISTGraph, precision, 0.1, verbose=True
             )
             results = optimizer.time_all_tested_geometries(data_sets, max(FLAGS.max_steps, 200000))
             final_results[precision] = results
-    print(final_results)
-    import json
-    results_out = json.dumps(final_results)
-    with open("results.txt", "w") as text_file:
-        text_file.write(results_out)
+
+    # results_out = json.dumps(final_results, cls=MyEncoder)
+    # print(results_out)
+    # results_out = MyEncoder().encode(final_results)
+    with open("results.3.txt", "w") as text_file:
+        # text_file.write(results_out)
+        print(final_results, file=text_file)
 
 if __name__ == '__main__':
     tf.app.run()
