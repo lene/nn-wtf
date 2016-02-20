@@ -65,7 +65,7 @@ def images_from_bytestream(bytestream, rows, cols, num_images):
 
 
 def read_one_image_from_file(filename):
-    from mnist_graph import IMAGE_SIZE
+    from nn_wtf.mnist_graph import IMAGE_SIZE
     with open(filename, 'rb') as bytestream:
         rows, cols = IMAGE_SIZE, IMAGE_SIZE
         return images_from_bytestream(bytestream, rows, cols, 1)

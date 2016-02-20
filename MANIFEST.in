@@ -1,0 +1,6 @@
+include README.md
+include LICENSE.md
+include ACKNOWLEDGEMENTS
+
+include data/*.raw
+include data/*.png

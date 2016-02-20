@@ -1,4 +1,4 @@
-from images_labels_data_set import ImagesLabelsDataSet
+from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
 from .util import create_minimal_input_placeholder
 
 import numpy

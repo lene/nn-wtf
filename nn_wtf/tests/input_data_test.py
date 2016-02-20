@@ -1,7 +1,10 @@
-from images_labels_data_set import ImagesLabelsDataSet
-from input_data import read_one_image_from_file
+from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
+from nn_wtf.input_data import read_one_image_from_file
 
-from mnist_graph import IMAGE_SIZE
+from nn_wtf.mnist_graph import IMAGE_SIZE
+
+from .util import get_project_root_folder
+
 import numpy
 
 import unittest
@@ -12,7 +15,7 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 class InputDataTest(unittest.TestCase):
 
     def setUp(self):
-        self.data = read_one_image_from_file('nn_wtf/data/0.raw')
+        self.data = read_one_image_from_file(get_project_root_folder()+'/nn_wtf/data/0.raw')
 
     def test_read_one_image_from_file(self):
         self.assertIsInstance(self.data, numpy.ndarray)
