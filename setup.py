@@ -4,14 +4,14 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 
 def readme():
-    with open('README.rst') as f:
+    with open('README.md') as f:
         return f.read()
 
 setup(
     name='nn_wtf',
-    version='0.1.1',
+    version='0.1.3',
     description='Neural Networks Wrapper for TensorFlow',
-    long_description='Really, the funniest around.',
+    long_description=readme(),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: Apache Software License',
