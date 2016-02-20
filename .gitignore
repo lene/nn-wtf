@@ -2,6 +2,10 @@
 dir.sh
 __pycache__
 
+build
+dist
+nn_wtf.egg-info
+
 # if tensorflow source is downloaded in this directory, ignore it
 tensorflow
 
