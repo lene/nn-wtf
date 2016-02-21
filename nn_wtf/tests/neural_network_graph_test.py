@@ -50,9 +50,8 @@ class NeuralNetworkGraphTest(unittest.TestCase):
 
     def test_build_neural_network_output(self):
         graph = self._create_minimal_graph()
-        input_placeholder = create_minimal_input_placeholder()
 
-        output = graph.build_neural_network(input_placeholder)
+        output = graph.build_neural_network(create_minimal_input_placeholder())
 
         self.assertIsInstance(output, tf.Tensor)
         self.assertEqual(2, output.get_shape().ndims)
@@ -71,8 +70,7 @@ class NeuralNetworkGraphTest(unittest.TestCase):
 
     def _check_num_hidden_layers_for_input_is(self, definition, expected_size):
         graph = NeuralNetworkGraph(MINIMAL_INPUT_SIZE, definition, MINIMAL_OUTPUT_SIZE)
-        input_placeholder = create_minimal_input_placeholder()
-        graph.build_neural_network(input_placeholder)
+        graph.build_neural_network(create_minimal_input_placeholder())
         self.assertEqual(expected_size, graph.num_hidden_layers)
 
     def _create_minimal_graph(self):

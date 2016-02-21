@@ -28,6 +28,7 @@ import tensorflow as tf
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
+flags.DEFINE_float('self_test', False, 'Run self-test.')
 flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
 flags.DEFINE_float('training_precision', 0.0, 'Precision for geometry optimization runs.')
 flags.DEFINE_float('desired_precision', 0.95, 'Desired training precision.')
@@ -79,7 +80,9 @@ def run_final_training(geometry, data_sets):
 
 
 def main(_):
-    if FLAGS.list_precisions:
+    if FLAGS.self_test:
+        iterate_over_precisions(self_test=True)
+    elif FLAGS.list_precisions:
         iterate_over_precisions()
     else:
         with tf.Graph().as_default():
@@ -97,13 +100,15 @@ def main(_):
             # print('prediction for 1:', graph.predict(one))
 
 
-def iterate_over_precisions():
+def iterate_over_precisions(self_test=False):
+    precisions = (0.4,) if self_test else (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992)
+    layer_sizes = ((32,), (32,), (None,)) if self_test else None
     data_sets = id.read_data_sets(FLAGS.train_dir)
     final_results = {}
-    for precision in (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992):
+    for precision in precisions:
         with tf.Graph().as_default():
             optimizer = NeuralNetworkOptimizer(
-                MNISTGraph, precision, 0.1, verbose=True
+                MNISTGraph, precision, layer_sizes=layer_sizes, learning_rate=0.1, verbose=True
             )
             results = optimizer.time_all_tested_geometries(data_sets, max(FLAGS.max_steps, 200000))
             final_results[precision] = results
