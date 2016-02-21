@@ -9,7 +9,7 @@ def readme():
 
 setup(
     name='nn_wtf',
-    version='0.1.3',
+    version='0.1.4',
     description='Neural Networks Wrapper for TensorFlow',
     long_description=readme(),
     classifiers=[
