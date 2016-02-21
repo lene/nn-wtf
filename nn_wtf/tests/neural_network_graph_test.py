@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from nn_wtf.neural_network_graph import NeuralNetworkGraph
 
 from .util import MINIMAL_INPUT_SIZE, MINIMAL_OUTPUT_SIZE, MINIMAL_LAYER_GEOMETRY, MINIMAL_BATCH_SIZE
@@ -55,6 +57,23 @@ class NeuralNetworkGraphTest(unittest.TestCase):
         self.assertIsInstance(output, tf.Tensor)
         self.assertEqual(2, output.get_shape().ndims)
         self.assertEqual(MINIMAL_OUTPUT_SIZE, int(output.get_shape()[1]))
+        self.assertEqual(len(graph.layers)-2, graph.num_hidden_layers)
+        self.assertEqual(len(MINIMAL_LAYER_GEOMETRY), graph.num_hidden_layers)
+
+    def test_build_neural_network_output_with_three_layers(self):
+        self._check_num_hidden_layers_for_input_is((4, 3, 2), 3)
+
+    def test_build_neural_network_output_with_last_layer_none(self):
+        self._check_num_hidden_layers_for_input_is((4, 3, None), 2)
+
+    def test_build_neural_network_output_with_middle_layer_none(self):
+        self._check_num_hidden_layers_for_input_is((4, None, 2), 2)
+
+    def _check_num_hidden_layers_for_input_is(self, definition, expected_size):
+        graph = NeuralNetworkGraph(MINIMAL_INPUT_SIZE, definition, MINIMAL_OUTPUT_SIZE)
+        input_placeholder = create_minimal_input_placeholder()
+        graph.build_neural_network(input_placeholder)
+        self.assertEqual(expected_size, graph.num_hidden_layers)
 
     def _create_minimal_graph(self):
         return NeuralNetworkGraph(MINIMAL_INPUT_SIZE, MINIMAL_LAYER_GEOMETRY, MINIMAL_OUTPUT_SIZE)

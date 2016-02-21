@@ -16,13 +16,14 @@ class NeuralNetworkGraph:
         self.input_size = int(input_size)
         self.output_size = int(output_size)
         self.layer_sizes = self._set_layer_sizes(layer_sizes)
-        self.num_hidden_layers = len(layer_sizes)
+        self.num_hidden_layers = len(self.layer_sizes)-1
         self.layers = []
 
     def _set_layer_sizes(self, layer_sizes):
+        layer_sizes = tuple(filter(None, layer_sizes))
         if layer_sizes[-1] < self.output_size:
             raise ValueError('Last layer size must be greater or equal output size')
-        return (self.input_size,) + tuple(filter(None, layer_sizes))
+        return (self.input_size,) + layer_sizes
 
     def build_neural_network(self, input):
         """Builds a neural network with the given layers and output size.

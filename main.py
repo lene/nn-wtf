@@ -111,5 +111,6 @@ def iterate_over_precisions():
     with open("results.txt", "w") as text_file:
         print(final_results, file=text_file)
 
+
 if __name__ == '__main__':
     tf.app.run()
