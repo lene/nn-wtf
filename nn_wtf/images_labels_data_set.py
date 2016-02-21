@@ -24,21 +24,12 @@ class ImagesLabelsDataSet:
             # Convert shape from [num examples, rows, columns, depth] to [num examples, rows*columns]
             # TODO: assumes depth == 1
             images = images.reshape(images.shape[0], images.shape[1] * images.shape[2])
-            images = self.normalize(images)
+            images = normalize(images)
 
         self._images = images
         self._labels = labels
         self._epochs_completed = 0
         self._index_in_epoch = 0
-
-    def normalize(self, ndarray):
-        """Transform a ndarray that contains uint8 values to floats between 0. and 1.
-
-        :param ndarray:
-        :return:
-        """
-        ndarray = ndarray.astype(numpy.float32)
-        return numpy.multiply(ndarray, 1.0 / 255.0)
 
     @property
     def images(self):
@@ -92,6 +83,18 @@ class ImagesLabelsDataSet:
         fake_label = 0
       return [fake_image for _ in range(batch_size)], [fake_label for _ in range(batch_size)]
 
+
+def normalize(ndarray):
+    """Transform a ndarray that contains uint8 values to floats between 0. and 1.
+
+    :param ndarray:
+    :return:
+    """
+    ndarray = ndarray.astype(numpy.float32)
+    return numpy.multiply(ndarray, 1.0 / 255.0)
+
+def invert(ndarray):
+    return numpy.subtract(1.0, ndarray)
 
 def _check_constructor_arguments_valid(images, labels):
     assert isinstance(images, numpy.ndarray), \

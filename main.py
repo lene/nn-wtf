@@ -15,9 +15,7 @@
 
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
-from random import randrange
 
-from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
 from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
 import nn_wtf.input_data as id
 from nn_wtf.mnist_graph import MNISTGraph
@@ -48,7 +46,7 @@ flags.DEFINE_boolean('list_precisions', False, 'If true, call optimizer for seve
 def run_training():
     """Train MNIST for a number of steps."""
     # Get the sets of images and labels for training, validation, and test on MNIST.
-    data_sets = id.fake_data_sets(False) if FLAGS.fake_data else id.read_data_sets(FLAGS.train_dir)
+    data_sets = id.fake_data_sets(False) if FLAGS.fake_data else DATA_SETS
 
     geometry = get_network_geometry(data_sets)
 
@@ -72,19 +70,24 @@ def get_network_geometry(data_sets):
     return geometry
 
 
-def run_final_training(geometry, data_sets):
+def run_final_training(geometry, data_sets, steps_between_checks=250):
     graph = MNISTGraph(
             learning_rate=FLAGS.learning_rate,
             hidden1=geometry[0], hidden2=geometry[1], hidden3=geometry[2],
             batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
         )
-    graph.train(data_sets, FLAGS.max_steps, precision=FLAGS.desired_precision, steps_between_checks=250)
+    graph.train(
+        data_sets, FLAGS.max_steps,
+        precision=FLAGS.desired_precision, steps_between_checks=steps_between_checks
+    )
     return graph
 
+DATA_SETS = id.read_data_sets(FLAGS.train_dir)
 
 def main(_):
+
     if FLAGS.self_test:
-        iterate_over_precisions(self_test=True)
+        perform_self_test()
     elif FLAGS.list_precisions:
         iterate_over_precisions(filename="results.txt")
     else:
@@ -93,23 +96,32 @@ def main(_):
             image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
             prediction = graph.predict(image_data)
             print('actual number: 7, prediction:', prediction)
-            # for i in range(10):
-            #     image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
-            #     prediction = graph.predict(image_data)
-            #     print(i, prediction)
+            for i in range(10):
+                image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'a.raw')
+                prediction = graph.predict(image_data)
+                print(i, prediction)
+
+
+def perform_self_test():
+    iterate_over_precisions(self_test=True)
+    FLAGS.learning_rate = 0.1
+    FLAGS.desired_precision = 0.9
+    graph = run_final_training((32, 32, None), DATA_SETS, steps_between_checks=50)
+    image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
+    prediction = graph.predict(image_data)
+    print('actual number: 7, prediction:', prediction)
 
 
 def iterate_over_precisions(filename=None, self_test=False):
     precisions = (0.4,) if self_test else DEFAULT_OPTIMIZER_PRECISIONS
     layer_sizes = ((32,), (32,), (None,)) if self_test else None
-    data_sets = id.read_data_sets(FLAGS.train_dir)
     final_results = {}
     for precision in precisions:
         with tf.Graph().as_default():
             optimizer = NeuralNetworkOptimizer(
                 MNISTGraph, precision, layer_sizes=layer_sizes, learning_rate=0.1, verbose=True
             )
-            results = optimizer.time_all_tested_geometries(data_sets, max(FLAGS.max_steps, 200000))
+            results = optimizer.time_all_tested_geometries(DATA_SETS, max(FLAGS.max_steps, 200000))
             final_results[precision] = results
 
     if filename:
