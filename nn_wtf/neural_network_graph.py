@@ -18,6 +18,7 @@ class NeuralNetworkGraph:
         self.layer_sizes = self._set_layer_sizes(layer_sizes)
         self.num_hidden_layers = len(self.layer_sizes)-1
         self.layers = []
+        self.prediction_op = None
 
     def _set_layer_sizes(self, layer_sizes):
         layer_sizes = tuple(filter(None, layer_sizes))
@@ -38,6 +39,9 @@ class NeuralNetworkGraph:
         assert isinstance(input, tf.Tensor)
         assert self.input_size == int(input.get_shape()[1])
         assert self.layers == []
+
+        self.input_placeholder = input
+        # self.batch_size = int(input.get_shape()[0])
 
         self.layers.append(input)
         for i in range(1, self.num_hidden_layers+1):
@@ -117,28 +121,14 @@ class NeuralNetworkGraph:
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
     def predict(self, session, image):
-        logits = self.layers[-1]
-        image_data = image.reshape(784)
-        x = tf.placeholder(tf.float32, shape=[None, 784])
-        feed_dict={x: [image_data]}
-        prediction=tf.argmax(logits,1)
-        best = session.run([prediction],feed_dict)
-        print(best)
-        return best
+        if self.prediction_op is None:
+            self.prediction_op = tf.argmax(self.layers[-1], 1)
 
-        x = tf.placeholder(tf.float32, shape=[None, 784])
-        y_ = tf.placeholder(tf.float32, shape=[None, 10])
-        W = tf.Variable(tf.zeros([784,10]))
-        b = tf.Variable(tf.zeros([10]))
-        session.run(tf.initialize_all_variables())
-        y = tf.nn.softmax(tf.matmul(x,W) + b)
+        image_data = image.reshape(self.input_size)
+        feed_dict = {self.input_placeholder: [image_data]}
+        best = session.run(self.prediction_op, feed_dict)
+        return best[0]
 
-        image_data = image.reshape(784)
-        print(image_data)
-        classification = session.run(tf.argmax(y, 1), feed_dict={x: [image_data]})
-        print('y', y)
-        print('classification:', classification)
-        return classification[0]
 
     def _add_layer(self, layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
         with tf.name_scope(layer_name):
@@ -148,6 +138,7 @@ class NeuralNetworkGraph:
         return new_layer
 
     def _initialize_weights(self, in_units_size, out_units_size):
+        """initialize weights with small amount of noise for symmetry breaking, and to prevent 0 gradients"""
         return tf.Variable(
             tf.truncated_normal([in_units_size, out_units_size], stddev=1.0 / math.sqrt(float(in_units_size))),
             name='weights'

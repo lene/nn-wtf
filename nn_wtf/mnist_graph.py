@@ -149,7 +149,7 @@ class MNISTGraph:
         self.print_eval(data_set)
 
     def predict(self, image):
-        self.graph.predict(self.session, image)
+        return self.graph.predict(self.session, image)
 
     def _build_graph(self):
         # Generate placeholders for the images and labels.
@@ -188,22 +188,24 @@ def ensure_is_dir(train_dir_string):
 
 
 def placeholder_inputs(batch_size):
-  """Generate placeholder variables to represent the input tensors.
+    """Generate placeholder variables to represent the input tensors.
 
-  These placeholders are used as inputs by the rest of the model building
-  code and will be fed from the downloaded data in the .run() loop, below.
+    These placeholders are used as inputs by the rest of the model building
+    code and will be fed from the downloaded data in the .run() loop, below.
 
-  Args:
-    batch_size: The batch size will be baked into both placeholders.
+    Args:
+      batch_size: The batch size will be baked into both placeholders.
 
-  Returns:
-    images_placeholder: Images placeholder.
-    labels_placeholder: Labels placeholder.
-  """
-  # Note that the shapes of the placeholders match the shapes of the full image and label
-  # tensors, except the first dimension is now batch_size rather than the full size of
-  # the train or test data sets.
-  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, IMAGE_PIXELS))
-  labels_placeholder = tf.placeholder(tf.int32, shape=batch_size)
-  return images_placeholder, labels_placeholder
+    Returns:
+      images_placeholder: Images placeholder.
+      labels_placeholder: Labels placeholder.
+    """
+    # Note that the shapes of the placeholders match the shapes of the full image and label
+    # tensors, except the first dimension is now batch_size rather than the full size of
+    # the train or test data sets.
+    # images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, IMAGE_PIXELS))
+    images_placeholder = tf.placeholder(tf.float32, shape=(None, IMAGE_PIXELS), name='images')
+    # labels_placeholder = tf.placeholder(tf.int32, shape=batch_size)
+    labels_placeholder = tf.placeholder(tf.int32, shape=(None,), name='labels')
+    return images_placeholder, labels_placeholder
 

@@ -15,6 +15,7 @@
 
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
+from random import randrange
 
 from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
 from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
@@ -23,6 +24,8 @@ from nn_wtf.mnist_graph import MNISTGraph
 
 import numpy
 import tensorflow as tf
+
+DEFAULT_OPTIMIZER_PRECISIONS = (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992)
 
 # Basic model parameters as external flags.
 
@@ -59,7 +62,7 @@ def run_training():
 def get_network_geometry(data_sets):
     if FLAGS.training_precision:
         optimizer = NeuralNetworkOptimizer(
-            MNISTGraph, FLAGS.training_precision, FLAGS.learning_rate, verbose=True
+            MNISTGraph, FLAGS.training_precision, learning_rate=FLAGS.learning_rate, verbose=True
         )
         geometry = optimizer.brute_force_optimal_network_geometry(data_sets, FLAGS.max_steps)
         print('Best geometry found:', geometry)
@@ -83,25 +86,21 @@ def main(_):
     if FLAGS.self_test:
         iterate_over_precisions(self_test=True)
     elif FLAGS.list_precisions:
-        iterate_over_precisions()
+        iterate_over_precisions(filename="results.txt")
     else:
         with tf.Graph().as_default():
             graph = run_training()
-            # one = input_data.read_one_image_from_file('data/1.raw')
-            # one_label = numpy.fromiter([1], dtype=numpy.uint8)
-            # data_set = ImagesLabelsDataSet.normalize(None, one)
-            # print(data_set)
-            #
-            # prediction = graph.predict(data_set)
-            # print('prediction for 1:', prediction)
-            # two = input_data.read_one_image_from_file('data/1.raw')
-            # one_label = numpy.fromiter([1], dtype=numpy.uint8)
-            # data_set = ImagesLabelsDataSet(one, one_label)
-            # print('prediction for 1:', graph.predict(one))
+            image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
+            prediction = graph.predict(image_data)
+            print('actual number: 7, prediction:', prediction)
+            # for i in range(10):
+            #     image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
+            #     prediction = graph.predict(image_data)
+            #     print(i, prediction)
 
 
-def iterate_over_precisions(self_test=False):
-    precisions = (0.4,) if self_test else (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992)
+def iterate_over_precisions(filename=None, self_test=False):
+    precisions = (0.4,) if self_test else DEFAULT_OPTIMIZER_PRECISIONS
     layer_sizes = ((32,), (32,), (None,)) if self_test else None
     data_sets = id.read_data_sets(FLAGS.train_dir)
     final_results = {}
@@ -113,8 +112,9 @@ def iterate_over_precisions(self_test=False):
             results = optimizer.time_all_tested_geometries(data_sets, max(FLAGS.max_steps, 200000))
             final_results[precision] = results
 
-    with open("results.txt", "w") as text_file:
-        print(final_results, file=text_file)
+    if filename:
+        with open(filename, "w") as text_file:
+            print(final_results, file=text_file)
 
 
 if __name__ == '__main__':
