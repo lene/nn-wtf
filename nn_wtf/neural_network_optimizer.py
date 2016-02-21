@@ -8,6 +8,11 @@ __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 class NeuralNetworkOptimizer:
 
     DEFAULT_LEARNING_RATE = 0.1
+    DEFAULT_LAYER_SIZES = (
+        (32, 48, 64, 80, 96, 128),
+        (32, 48, 64, 80, 96, 128),
+        (None, 16, 32, 48)
+    )
 
     class TimingInfo:
 
@@ -29,11 +34,12 @@ class NeuralNetworkOptimizer:
         def __dict__(self):
             return {'cpu_time': self.cpu_time, 'step': self.step, 'layers': self.layers}
 
-    def __init__(self, tested_network, training_precision, learning_rate=None, verbose=False):
+    def __init__(self, tested_network, training_precision, layer_sizes=None, learning_rate=None, verbose=False):
         self.tested_network = tested_network
         self.verbose = verbose
         self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
         self.training_precision = training_precision
+        self.layer_sizes = self.DEFAULT_LAYER_SIZES if layer_sizes is None else layer_sizes
 
     def brute_force_optimal_network_geometry(self, data_sets, max_steps):
         results = self.time_all_tested_geometries(data_sets, max_steps)
@@ -53,9 +59,9 @@ class NeuralNetworkOptimizer:
 
     def get_network_geometries(self):
         return ((l1, l2, l3)
-                for l1 in (32, 48, 64, 80, 96, 128)
-                for l2 in (32, 48, 64, 80, 96, 128) if l2 <= l1
-                for l3 in (None, 16, 32, 48) if l3 is None or l3 <= l2)
+                for l1 in self.layer_sizes[0]
+                for l2 in self.layer_sizes[1] if l2 <= l1
+                for l3 in self.layer_sizes[2] if l3 is None or l3 <= l2)
 
     def brute_force_optimize_learning_rate(self):
         raise NotImplemented()
