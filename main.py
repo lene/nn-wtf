@@ -96,6 +96,11 @@ def main(_):
             image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
             prediction = graph.predict(image_data)
             print('actual number: 7, prediction:', prediction)
+            image_data = id.read_one_image_from_url(
+                'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
+            )
+            prediction = graph.predict(image_data)
+            print('actual number: 7, prediction:', prediction)
             for i in range(10):
                 image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
                 prediction = graph.predict(image_data)

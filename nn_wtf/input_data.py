@@ -19,9 +19,11 @@ import gzip
 import os
 
 import numpy
-from six.moves import urllib
 
 from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
+from nn_wtf.mnist_graph import IMAGE_SIZE
+
+import urllib.request
 
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 
@@ -65,19 +67,27 @@ def images_from_bytestream(bytestream, rows, cols, num_images):
 
 
 def read_one_image_from_file(filename):
-    from nn_wtf.mnist_graph import IMAGE_SIZE
     with open(filename, 'rb') as bytestream:
-        rows, cols = IMAGE_SIZE, IMAGE_SIZE
-        return images_from_bytestream(bytestream, rows, cols, 1)
+        return read_one_image_from_bytestream(bytestream)
+
+
+def read_one_image_from_url(url):
+    with urllib.request.urlopen(url) as bytestream:
+        return read_one_image_from_bytestream(bytestream)
+
+
+def read_one_image_from_bytestream(bytestream):
+    rows, cols = IMAGE_SIZE, IMAGE_SIZE
+    return images_from_bytestream(bytestream, rows, cols, 1)
 
 
 def dense_to_one_hot(labels_dense, num_classes=10):
-  """Convert class labels from scalars to one-hot vectors."""
-  num_labels = labels_dense.shape[0]
-  index_offset = numpy.arange(num_labels) * num_classes
-  labels_one_hot = numpy.zeros((num_labels, num_classes))
-  labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
-  return labels_one_hot
+    """Convert class labels from scalars to one-hot vectors."""
+    num_labels = labels_dense.shape[0]
+    index_offset = numpy.arange(num_labels) * num_classes
+    labels_one_hot = numpy.zeros((num_labels, num_classes))
+    labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
+    return labels_one_hot
 
 
 def extract_labels(filename, one_hot=False):

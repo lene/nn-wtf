@@ -28,3 +28,4 @@ class InputDataTest(unittest.TestCase):
     def test_image_labels_data_set_from_image(self):
         labels = numpy.fromiter([0], dtype=numpy.uint8)
         data_set = ImagesLabelsDataSet(self.data, labels)
+
