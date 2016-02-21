@@ -1,17 +1,21 @@
 from setuptools import setup
 
-__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
+try:
+    from pypandoc import convert
 
+    def read_md(f):
+        return convert(f, 'rst')
+except ImportError:
+    def read_md(f):
+        with open(f, 'r') as h:
+            return h.read()
 
-def readme():
-    with open('README.md') as f:
-        return f.read()
 
 setup(
     name='nn_wtf',
-    version='0.1.4',
+    version='0.1.5',
     description='Neural Networks Wrapper for TensorFlow',
-    long_description=readme(),
+    long_description=read_md('README.md'),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: Apache Software License',
@@ -24,6 +28,7 @@ setup(
     author_email='lene.preuss@gmail.com',
     license='Apache Software License V2',
     packages=['nn_wtf'],
+    package_data={'nn_wtf': ['data/*.raw']},
     install_requires=[
         'numpy'
     ],

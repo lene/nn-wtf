@@ -2,8 +2,6 @@ include README.md
 include LICENSE.md
 include ACKNOWLEDGEMENTS
 
-include nn_wtf/data/*.raw
-include nn_wtf/data/*.png
 include nn_wtf/data/*.py
 include nn_wtf/data/*.sh
 
