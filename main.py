@@ -96,16 +96,11 @@ def main(_):
             # data_set = ImagesLabelsDataSet(one, one_label)
             # print('prediction for 1:', graph.predict(one))
 
-import json
-class MyEncoder(json.JSONEncoder):
-    def default(self, o):
-        return o.__dict__
 
 def iterate_over_precisions():
-    data_sets = input_data.read_data_sets(FLAGS.train_dir)
+    data_sets = id.read_data_sets(FLAGS.train_dir)
     final_results = {}
-    # for precision in (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992):
-    for precision in (0.995,):
+    for precision in (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992):
         with tf.Graph().as_default():
             optimizer = NeuralNetworkOptimizer(
                 MNISTGraph, precision, 0.1, verbose=True
@@ -113,11 +108,7 @@ def iterate_over_precisions():
             results = optimizer.time_all_tested_geometries(data_sets, max(FLAGS.max_steps, 200000))
             final_results[precision] = results
 
-    # results_out = json.dumps(final_results, cls=MyEncoder)
-    # print(results_out)
-    # results_out = MyEncoder().encode(final_results)
-    with open("results.3.txt", "w") as text_file:
-        # text_file.write(results_out)
+    with open("results.txt", "w") as text_file:
         print(final_results, file=text_file)
 
 if __name__ == '__main__':
