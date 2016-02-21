@@ -25,8 +25,10 @@ setup(
     license='Apache Software License V2',
     packages=['nn_wtf'],
     install_requires=[
-        # 'https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.6.0-cp34-none-linux_x86_64.whl',
         'numpy'
+    ],
+    dependency_links=[
+        'https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.7.0-py3-none-linux_x86_64.whl'
     ],
     include_package_data=True,
     zip_safe=False

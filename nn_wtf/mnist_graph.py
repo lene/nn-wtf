@@ -15,20 +15,23 @@ NUM_CLASSES = 10
 IMAGE_SIZE = 28
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
+DEFAULT_TRAIN_DIR='.nn_wtf-data'
+
+
 class MNISTGraph:
 
     def __init__(
         self, verbose=True,
-        learning_rate=0.01, hidden1=128, hidden2=32, hidden3=None, batch_size=100, train_dir='data'
+        learning_rate=0.01, hidden1=128, hidden2=32, hidden3=None, batch_size=100,
+        train_dir=DEFAULT_TRAIN_DIR
     ):
-        # self.flags = flags
         self.verbose = verbose
         self.learning_rate = learning_rate
         self.hidden = (hidden1, hidden2)
         if hidden3:
             self.hidden += (hidden3,)
         self.batch_size = batch_size
-        self.train_dir = train_dir
+        self.train_dir = ensure_is_dir(train_dir)
         self.fake_data = False
 
         self._build_graph()
@@ -64,7 +67,7 @@ class MNISTGraph:
 
             # Save a checkpoint and evaluate the model periodically.
             if (self.step + 1) % 1000 == 0 or (self.step + 1) == max_steps:
-                self.saver.save(self.session, self.train_dir, global_step=self.step)
+                self.saver.save(self.session, save_path=self.train_dir, global_step=self.step)
                 self.print_evaluations(data_sets)
 
     def print_evaluations(self, data_sets):
@@ -176,6 +179,12 @@ class MNISTGraph:
         # Create a saver for writing training checkpoints.
         self.saver = tf.train.Saver()
         self.summary_writer = None
+
+
+def ensure_is_dir(train_dir_string):
+    if not train_dir_string[-1] == '/':
+        train_dir_string += '/'
+    return train_dir_string
 
 
 def placeholder_inputs(batch_size):
