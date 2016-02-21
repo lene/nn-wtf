@@ -97,7 +97,7 @@ def main(_):
             prediction = graph.predict(image_data)
             print('actual number: 7, prediction:', prediction)
             for i in range(10):
-                image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'a.raw')
+                image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
                 prediction = graph.predict(image_data)
                 print(i, prediction)
 
@@ -110,6 +110,7 @@ def perform_self_test():
     image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
     prediction = graph.predict(image_data)
     print('actual number: 7, prediction:', prediction)
+    assert prediction == 7
 
 
 def iterate_over_precisions(filename=None, self_test=False):
