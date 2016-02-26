@@ -46,13 +46,13 @@ flags.DEFINE_boolean('list_precisions', False, 'If true, call optimizer for seve
 def run_training():
     """Train MNIST for a number of steps."""
     # Get the sets of images and labels for training, validation, and test on MNIST.
-    data_sets = id.fake_data_sets(False) if FLAGS.fake_data else DATA_SETS
+    data_sets = DATA_SETS
 
     geometry = get_network_geometry(data_sets)
 
     graph, cpu, wall = timed_run(run_final_training, geometry, data_sets)
 
-    print(NeuralNetworkOptimizer.TimingInfo(cpu, wall, graph.precision, graph.step, geometry))
+    print(NeuralNetworkOptimizer.TimingInfo(cpu, wall, graph.graph.precision, graph.graph.step, geometry))
 
     return graph
 

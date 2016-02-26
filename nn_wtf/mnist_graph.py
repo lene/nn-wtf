@@ -43,42 +43,17 @@ class MNISTGraph:
         assert precision is None or 0. < precision < 1.
 
         self.session = self.initialize_session()
+        self.graph.set_session(self.session)
 
         # And then after everything is built, start the training loop.
-        while self.step < max_steps and not self._has_reached_precision(data_sets, precision):
-
-            feed_dict, loss_value = self.run_training_steps(data_sets, steps_between_checks)
-
-            self.write_summary(feed_dict, loss_value, self.step)
+        self.graph.train(
+            data_sets, max_steps, precision, steps_between_checks,
+            run_as_check=self.write_summary, batch_size=self.batch_size
+        )
 
         # Save a checkpoint when done
         self.saver.save(self.session, save_path=self.train_dir, global_step=self.step)
         self.print_evaluations(data_sets)
-
-    def _has_reached_precision(self, data_sets, precision):
-        if precision is not None:
-            self.do_eval(data_sets.test)
-            if self.precision > precision:
-                return True
-        return False
-
-    def run_training_steps(self, data_sets, num_steps):
-        feed_dict, loss_value = None, None
-        for step in range(num_steps):
-            feed_dict, loss_value = self.run_training_step(data_sets)
-        self.step += num_steps
-        return feed_dict, loss_value
-
-    def run_training_step(self, data_sets):
-        # Fill a feed dictionary with the actual set of images and labels for this particular
-        # training step.
-        feed_dict = self.fill_feed_dict(data_sets.train)
-        # Run one step of the model.  The return values are the activations from the `train_op`
-        # (which is discarded) and the `loss` Op. To inspect the values of your Ops or
-        # variables, you may include them in the list passed to session.run() and the value
-        # tensors will be returned in the tuple from the call.
-        _, loss_value = self.session.run([self.graph.train_op, self.graph.loss_op], feed_dict=feed_dict)
-        return feed_dict, loss_value
 
     def print_evaluations(self, data_sets):
         if self.verbose: print('Training Data Eval:')
@@ -100,29 +75,6 @@ class MNISTGraph:
         self.summary_writer = tf.train.SummaryWriter(self.train_dir, graph_def=sess.graph_def)
         return sess
 
-    def fill_feed_dict(self, data_set):
-        """Fills the feed_dict for training the given step.
-
-        A feed_dict takes the form of:
-        feed_dict = {
-            <placeholder>: <tensor of values to be passed for placeholder>,
-              ....
-        }
-
-        Args:
-          data_set: The set of images and labels, from input_data.read_data_sets()
-
-        Returns:
-          feed_dict: The feed dictionary mapping from placeholders to values.
-        """
-        # Create the feed_dict for the placeholders filled with the next `batch size ` examples.
-        images_feed, labels_feed = data_set.next_batch(self.batch_size)
-        feed_dict = {
-            self.images_placeholder: images_feed,
-            self.labels_placeholder: labels_feed,
-        }
-        return feed_dict
-
     def write_summary(self, feed_dict, loss_value, step):
         # Print status to stdout.
         if self.verbose:
@@ -131,27 +83,12 @@ class MNISTGraph:
         summary_str = self.session.run(self.summary_op, feed_dict=feed_dict)
         self.summary_writer.add_summary(summary_str, step)
 
-    def do_eval(self, data_set):
-        """Runs one evaluation against the full epoch of data.
-
-        Args:
-          session: The session in which the model has been trained.
-          data_set: The set of images and labels to evaluate, from
-            input_data.read_data_sets().
-        """
-        self.true_count = 0  # Counts the number of correct predictions.
-        steps_per_epoch = data_set.num_examples // self.batch_size
-        self.num_examples = steps_per_epoch * self.batch_size
-        for _ in range(steps_per_epoch):
-            feed_dict = self.fill_feed_dict(data_set)
-            self.true_count += self.session.run(self.graph.eval_correct_op, feed_dict=feed_dict)
-        self.precision = self.true_count / self.num_examples
 
     def print_eval(self, data_set):
-        self.do_eval(data_set)
+        self.graph.do_eval(data_set, self.batch_size)
         if self.verbose:
             print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
-                  (self.num_examples, self.true_count, self.precision))
+                  (self.graph.num_examples, self.graph.true_count, self.graph.precision))
 
     def evaluate_new_data_set(self, data_set):
         self.batch_size = data_set.num_examples
@@ -173,7 +110,7 @@ class MNISTGraph:
         )
 
         # Build a Graph that computes predictions from the inference model.
-        self.logits = self.graph.build_neural_network(self.images_placeholder)
+        self.graph.build_neural_network(self.images_placeholder)
 
         self.graph.build_train_ops(self.labels_placeholder, self.learning_rate)
 
