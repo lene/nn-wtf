@@ -160,9 +160,7 @@ class MNISTGraph:
         )
 
         # Build a Graph that computes predictions from the inference model.
-        self.logits = self.graph.build_neural_network(
-            self.images_placeholder
-        )
+        self.logits = self.graph.build_neural_network(self.images_placeholder)
 
         # Add to the Graph the Ops for loss calculation.
         self.loss = self.graph.loss(self.logits, self.labels_placeholder)

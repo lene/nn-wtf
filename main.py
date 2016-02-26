@@ -84,6 +84,7 @@ def run_final_training(geometry, data_sets, steps_between_checks=250):
 
 DATA_SETS = id.read_data_sets(FLAGS.train_dir)
 
+
 def main(_):
 
     if FLAGS.self_test:

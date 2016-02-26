@@ -9,8 +9,10 @@ class NeuralNetworkOptimizer:
 
     DEFAULT_LEARNING_RATE = 0.1
     DEFAULT_LAYER_SIZES = (
-        (32, 48, 64, 80, 96, 128),
-        (32, 48, 64, 80, 96, 128),
+        (32, 48, 64, 80),
+        (32, 48, 64, 80),
+        # (32, 48, 64, 80, 96, 128),
+        # (32, 48, 64, 80, 96, 128),
         (None, 16, 32, 48)
     )
 
@@ -24,7 +26,7 @@ class NeuralNetworkOptimizer:
             self.layers = layers
 
         def __str__(self):
-            return 'CPU: {:7.3f}s Wall: {:7.3f}s Precision: {:5.2f}% Iterations: {:4d} Geometry: {}'.format(
+            return 'CPU: {:7.2f}s Wall: {:7.2f}s Precision: {:5.2f}% Iterations: {:4d} Geometry: {}'.format(
                 self.cpu_time, self.wall_time, 100.*self.precision, self.step, str(self.layers)
             )
 

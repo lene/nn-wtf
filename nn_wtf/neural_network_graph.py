@@ -1,4 +1,7 @@
+from nn_wtf.predictor import Predictor
+
 import tensorflow as tf
+
 import math
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
@@ -18,7 +21,7 @@ class NeuralNetworkGraph:
         self.layer_sizes = self._set_layer_sizes(layer_sizes)
         self.num_hidden_layers = len(self.layer_sizes)-1
         self.layers = []
-        self.prediction_op = None
+        self.predictor = None
 
     def _set_layer_sizes(self, layer_sizes):
         layer_sizes = tuple(filter(None, layer_sizes))
@@ -26,24 +29,23 @@ class NeuralNetworkGraph:
             raise ValueError('Last layer size must be greater or equal output size')
         return (self.input_size,) + layer_sizes
 
-    def build_neural_network(self, input):
+    def build_neural_network(self, input_placeholder):
         """Builds a neural network with the given layers and output size.
 
         Args:
-          input: Images placeholder, from inputs().
+          input_placeholder: Images placeholder, from inputs().
 
         Returns:
           logits: Output tensor with the computed logits.
         """
 
-        assert isinstance(input, tf.Tensor)
-        assert self.input_size == int(input.get_shape()[1])
+        assert isinstance(input_placeholder, tf.Tensor)
+        assert self.input_size == int(input_placeholder.get_shape()[1])
         assert self.layers == []
 
-        self.input_placeholder = input
-        # self.batch_size = int(input.get_shape()[0])
+        self.input_placeholder = input_placeholder
 
-        self.layers.append(input)
+        self.layers.append(input_placeholder)
         for i in range(1, self.num_hidden_layers+1):
             self.layers.append(
                 self._add_layer(
@@ -57,17 +59,17 @@ class NeuralNetworkGraph:
 
         return logits
 
-    def loss(self, logits, labels):
+    def loss(self, logits, labels_placeholder):
         """Calculates the loss from the logits and the labels.
 
         Args:
           logits: Logits tensor, float - [batch_size, NUM_CLASSES].
-          labels: Labels tensor, int32 - [batch_size].
+          labels_placeholder: Labels tensor, int32 - [batch_size].
 
         Returns:
           loss: Loss tensor of type float.
         """
-        onehot_labels = self._convert_labels_to_onehot(labels)
+        onehot_labels = self._convert_labels_to_onehot(labels_placeholder)
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
             logits, onehot_labels, name='cross_entropy'
         )
@@ -121,14 +123,9 @@ class NeuralNetworkGraph:
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
     def predict(self, session, image):
-        if self.prediction_op is None:
-            self.prediction_op = tf.argmax(self.layers[-1], 1)
-
-        image_data = image.reshape(self.input_size)
-        feed_dict = {self.input_placeholder: [image_data]}
-        best = session.run(self.prediction_op, feed_dict)
-        return best[0]
-
+        if self.predictor is None:
+            self.predictor = Predictor(self)
+        return self.predictor.predict(session, image)
 
     def _add_layer(self, layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
         with tf.name_scope(layer_name):
@@ -158,4 +155,5 @@ class NeuralNetworkGraph:
         indices = tf.expand_dims(tf.range(0, batch_size), 1)
         concated = tf.concat(1, [indices, labels])
         return tf.sparse_to_dense(concated, tf.pack([batch_size, self.output_size]), 1.0, 0.0)
+
 
