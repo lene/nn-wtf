@@ -95,8 +95,10 @@ def main(_):
         with tf.Graph().as_default():
             graph = run_training()
             image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
-            prediction = graph.predict(image_data)
-            print('actual number: 7, prediction:', prediction)
+            print(
+                'actual number: 7, prediction:', graph.predict(image_data),
+                'predicted probabilities:', graph.prediction_probabilities(image_data)
+            )
             image_data = id.read_one_image_from_url(
                 'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
             )

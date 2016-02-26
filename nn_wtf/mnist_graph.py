@@ -151,6 +151,9 @@ class MNISTGraph:
     def predict(self, image):
         return self.graph.predict(self.session, image)
 
+    def prediction_probabilities(self, image):
+        return self.graph.predictor.prediction_probabilities(self.session, image)
+
     def _build_graph(self):
         # Generate placeholders for the images and labels.
         self.images_placeholder, self.labels_placeholder = placeholder_inputs(self.batch_size)
