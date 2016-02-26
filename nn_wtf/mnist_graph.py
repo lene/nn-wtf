@@ -32,7 +32,6 @@ class MNISTGraph:
             self.hidden += (hidden3,)
         self.batch_size = batch_size
         self.train_dir = ensure_is_dir(train_dir)
-        self.fake_data = False
 
         self._build_graph()
         self._setup_summaries()
@@ -45,15 +44,7 @@ class MNISTGraph:
         for self.step in range(max_steps):
             start_time = time.time()
 
-            # Fill a feed dictionary with the actual set of images and labels for this particular
-            # training step.
-            feed_dict = self.fill_feed_dict(data_sets.train)
-
-            # Run one step of the model.  The return values are the activations from the `train_op`
-            # (which is discarded) and the `loss` Op. To inspect the values of your Ops or
-            # variables, you may include them in the list passed to session.run() and the value
-            # tensors will be returned in the tuple from the call.
-            _, loss_value = self.session.run([self.train_op, self.loss], feed_dict=feed_dict)
+            feed_dict, loss_value = self.run_training_steps(data_sets)
 
             duration = time.time() - start_time
 
@@ -69,6 +60,17 @@ class MNISTGraph:
             if (self.step + 1) % 1000 == 0 or (self.step + 1) == max_steps:
                 self.saver.save(self.session, save_path=self.train_dir, global_step=self.step)
                 self.print_evaluations(data_sets)
+
+    def run_training_steps(self, data_sets):
+        # Fill a feed dictionary with the actual set of images and labels for this particular
+        # training step.
+        feed_dict = self.fill_feed_dict(data_sets.train)
+        # Run one step of the model.  The return values are the activations from the `train_op`
+        # (which is discarded) and the `loss` Op. To inspect the values of your Ops or
+        # variables, you may include them in the list passed to session.run() and the value
+        # tensors will be returned in the tuple from the call.
+        _, loss_value = self.session.run([self.train_op, self.loss], feed_dict=feed_dict)
+        return feed_dict, loss_value
 
     def print_evaluations(self, data_sets):
         if self.verbose: print('Training Data Eval:')
@@ -106,7 +108,7 @@ class MNISTGraph:
           feed_dict: The feed dictionary mapping from placeholders to values.
         """
         # Create the feed_dict for the placeholders filled with the next `batch size ` examples.
-        images_feed, labels_feed = data_set.next_batch(self.batch_size, self.fake_data)
+        images_feed, labels_feed = data_set.next_batch(self.batch_size)
         feed_dict = {
             self.images_placeholder: images_feed,
             self.labels_placeholder: labels_feed,

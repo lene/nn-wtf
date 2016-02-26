@@ -17,10 +17,6 @@ class ImagesLabelsDataSetTest(unittest.TestCase):
     def test_init_without_fake_data_runs(self):
         _create_empty_data_set()
 
-    def test_init_with_fake_data_runs(self):
-        images = create_minimal_input_placeholder()
-        ImagesLabelsDataSet(images, images, fake_data=True)
-
     def test_init_with_different_label_size_fails(self):
         images = create_empty_image_data()
         labels = create_empty_label_dataof_size(NUM_TRAINING_SAMPLES+1)

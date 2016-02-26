@@ -5,7 +5,7 @@ __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 
 class ImagesLabelsDataSet:
 
-    def __init__(self, images, labels, fake_data=False, one_hot=False):
+    def __init__(self, images, labels):
         """Construct a DataSet. one_hot arg is used only if fake_data is true.
 
         Args:
@@ -13,18 +13,14 @@ class ImagesLabelsDataSet:
           labels: 1D numpy.ndarray of shape (num images)
         """
 
-        if fake_data:
-            self._num_examples = 10000
-            self.one_hot = one_hot
-        else:
-            _check_constructor_arguments_valid(images, labels)
+        _check_constructor_arguments_valid(images, labels)
 
-            self._num_examples = images.shape[0]
+        self._num_examples = images.shape[0]
 
-            # Convert shape from [num examples, rows, columns, depth] to [num examples, rows*columns]
-            # TODO: assumes depth == 1
-            images = images.reshape(images.shape[0], images.shape[1] * images.shape[2])
-            images = normalize(images)
+        # Convert shape from [num examples, rows, columns, depth] to [num examples, rows*columns]
+        # TODO: assumes depth == 1
+        images = images.reshape(images.shape[0], images.shape[1] * images.shape[2])
+        images = normalize(images)
 
         self._images = images
         self._labels = labels
@@ -47,11 +43,8 @@ class ImagesLabelsDataSet:
     def epochs_completed(self):
         return self._epochs_completed
 
-    def next_batch(self, batch_size, fake_data=False):
+    def next_batch(self, batch_size):
         """Return the next `batch_size` examples from this data set."""
-        if fake_data:
-            return self._fake_batch(batch_size)
-
         return self._next_batch_in_epoch(batch_size)
 
     def _next_batch_in_epoch(self, batch_size):
@@ -74,14 +67,6 @@ class ImagesLabelsDataSet:
         numpy.random.shuffle(perm)
         self._images = self._images[perm]
         self._labels = self._labels[perm]
-
-    def _fake_batch(self, batch_size):
-      fake_image = [1] * 784
-      if self.one_hot:
-        fake_label = [1] + [0] * 9
-      else:
-        fake_label = 0
-      return [fake_image for _ in range(batch_size)], [fake_label for _ in range(batch_size)]
 
 
 def normalize(ndarray):

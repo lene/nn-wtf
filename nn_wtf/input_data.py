@@ -146,10 +146,3 @@ def read_data_sets(train_dir, one_hot=False):
         ImagesLabelsDataSet(test_images, test_labels)
     )
 
-
-def fake_data_sets(one_hot):
-    return DataSets(
-        ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot),
-        ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot),
-        ImagesLabelsDataSet([], [], fake_data=True, one_hot=one_hot)
-    )
