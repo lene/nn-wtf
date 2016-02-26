@@ -70,15 +70,20 @@ def get_network_geometry(data_sets):
     return geometry
 
 
-def run_final_training(geometry, data_sets, steps_between_checks=250):
+def run_final_training(
+    geometry, data_sets,
+    steps_between_checks=250, learning_rate=FLAGS.learning_rate, max_steps=FLAGS.max_steps,
+    desired_precision=FLAGS.desired_precision
+
+):
     graph = MNISTGraph(
-            learning_rate=FLAGS.learning_rate,
+            learning_rate=learning_rate,
             hidden1=geometry[0], hidden2=geometry[1], hidden3=geometry[2],
             batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
         )
     graph.train(
-        data_sets, FLAGS.max_steps,
-        precision=FLAGS.desired_precision, steps_between_checks=steps_between_checks
+        data_sets, max_steps,
+        precision=desired_precision, steps_between_checks=steps_between_checks
     )
     return graph
 
@@ -112,13 +117,18 @@ def main(_):
 
 def perform_self_test():
     iterate_over_precisions(self_test=True)
-    FLAGS.learning_rate = 0.1
-    FLAGS.desired_precision = 0.9
-    graph = run_final_training((32, 32, None), DATA_SETS, steps_between_checks=50)
+    graph = run_final_training(
+        (32, 32, None), DATA_SETS, steps_between_checks=50, learning_rate=0.1, desired_precision=0.8
+    )
     image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
     prediction = graph.predict(image_data)
-    print('actual number: 7, prediction:', prediction)
+    probabilities = graph.prediction_probabilities(image_data)
+    print(
+        'actual number: 7, prediction:', prediction,
+        'predicted probabilities:', probabilities
+    )
     assert prediction == 7
+    assert probabilities.argmax() == prediction
 
 
 def iterate_over_precisions(filename=None, self_test=False):

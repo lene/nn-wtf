@@ -33,35 +33,43 @@ class MNISTGraph:
         self.batch_size = batch_size
         self.train_dir = ensure_is_dir(train_dir)
 
+        self.step = 0
+
         self._build_graph()
         self._setup_summaries()
 
     def train(self, data_sets, max_steps, precision=None, steps_between_checks=100):
 
+        assert precision is None or 0. < precision < 1.
+
         self.session = self.initialize_session()
 
         # And then after everything is built, start the training loop.
-        for self.step in range(max_steps):
-            start_time = time.time()
+        while self.step < max_steps and not self._has_reached_precision(data_sets, precision):
 
-            feed_dict, loss_value = self.run_training_steps(data_sets)
+            feed_dict, loss_value = self.run_training_steps(data_sets, steps_between_checks)
 
-            duration = time.time() - start_time
+            self.write_summary(feed_dict, loss_value, self.step)
 
-            # Write the summaries and print an overview fairly often.
-            if self.step % steps_between_checks == 0:
-                self.write_summary(duration, feed_dict, loss_value, self.step)
-                if precision is not None:
-                    self.do_eval(data_sets.test)
-                    if self.precision > precision:
-                        return
+        # Save a checkpoint when done
+        self.saver.save(self.session, save_path=self.train_dir, global_step=self.step)
+        self.print_evaluations(data_sets)
 
-            # Save a checkpoint and evaluate the model periodically.
-            if (self.step + 1) % 1000 == 0 or (self.step + 1) == max_steps:
-                self.saver.save(self.session, save_path=self.train_dir, global_step=self.step)
-                self.print_evaluations(data_sets)
+    def _has_reached_precision(self, data_sets, precision):
+        if precision is not None:
+            self.do_eval(data_sets.test)
+            if self.precision > precision:
+                return True
+        return False
 
-    def run_training_steps(self, data_sets):
+    def run_training_steps(self, data_sets, num_steps):
+        feed_dict, loss_value = None, None
+        for step in range(num_steps):
+            feed_dict, loss_value = self.run_training_step(data_sets)
+        self.step += num_steps
+        return feed_dict, loss_value
+
+    def run_training_step(self, data_sets):
         # Fill a feed dictionary with the actual set of images and labels for this particular
         # training step.
         feed_dict = self.fill_feed_dict(data_sets.train)
@@ -69,7 +77,7 @@ class MNISTGraph:
         # (which is discarded) and the `loss` Op. To inspect the values of your Ops or
         # variables, you may include them in the list passed to session.run() and the value
         # tensors will be returned in the tuple from the call.
-        _, loss_value = self.session.run([self.train_op, self.loss], feed_dict=feed_dict)
+        _, loss_value = self.session.run([self.graph.train_op, self.graph.loss_op], feed_dict=feed_dict)
         return feed_dict, loss_value
 
     def print_evaluations(self, data_sets):
@@ -115,10 +123,10 @@ class MNISTGraph:
         }
         return feed_dict
 
-    def write_summary(self, duration, feed_dict, loss_value, step):
+    def write_summary(self, feed_dict, loss_value, step):
         # Print status to stdout.
         if self.verbose:
-            print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
+            print('Step %d: loss = %.2f ' % (step, loss_value))
         # Update the events file.
         summary_str = self.session.run(self.summary_op, feed_dict=feed_dict)
         self.summary_writer.add_summary(summary_str, step)
@@ -136,7 +144,7 @@ class MNISTGraph:
         self.num_examples = steps_per_epoch * self.batch_size
         for _ in range(steps_per_epoch):
             feed_dict = self.fill_feed_dict(data_set)
-            self.true_count += self.session.run(self.eval_correct, feed_dict=feed_dict)
+            self.true_count += self.session.run(self.graph.eval_correct_op, feed_dict=feed_dict)
         self.precision = self.true_count / self.num_examples
 
     def print_eval(self, data_set):
@@ -167,14 +175,7 @@ class MNISTGraph:
         # Build a Graph that computes predictions from the inference model.
         self.logits = self.graph.build_neural_network(self.images_placeholder)
 
-        # Add to the Graph the Ops for loss calculation.
-        self.loss = self.graph.loss(self.logits, self.labels_placeholder)
-
-        # Add to the Graph the Ops that calculate and apply gradients.
-        self.train_op = self.graph.training(self.loss, self.learning_rate)
-
-        # Add the Op to compare the logits to the labels during evaluation.
-        self.eval_correct = self.graph.evaluation(self.logits, self.labels_placeholder)
+        self.graph.build_train_ops(self.labels_placeholder, self.learning_rate)
 
     def _setup_summaries(self):
         # Build the summary operation based on the TF collection of Summaries.

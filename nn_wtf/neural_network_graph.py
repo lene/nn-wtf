@@ -59,6 +59,23 @@ class NeuralNetworkGraph:
 
         return logits
 
+    def build_train_ops(self, labels_placeholder, learning_rate):
+        # Add to the Graph the Ops for loss calculation.
+        self.loss_op = self.loss(self.layers[-1], labels_placeholder)
+
+        # Add to the Graph the Ops that calculate and apply gradients.
+        self.train_op = self.training(self.loss_op, learning_rate)
+
+        # Add the Op to compare the logits to the labels during evaluation.
+        self.eval_correct_op = self.evaluation(self.layers[-1], labels_placeholder)
+
+
+    def train(self, data_sets, max_steps, precision=None, steps_between_checks=100):
+        pass
+
+    def save(self):
+        pass
+
     def loss(self, logits, labels_placeholder):
         """Calculates the loss from the logits and the labels.
 

@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from nn_wtf.neural_network_graph import NeuralNetworkGraph
 
 from .util import MINIMAL_INPUT_SIZE, MINIMAL_OUTPUT_SIZE, MINIMAL_LAYER_GEOMETRY, MINIMAL_BATCH_SIZE
