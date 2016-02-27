@@ -79,8 +79,8 @@ class NeuralNetworkGraph:
         self.session = session
 
     def train(
-            self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
-            batch_size=1000
+        self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
+        batch_size=1000
     ):
         assert precision is None or 0. < precision < 1.
 
@@ -94,7 +94,7 @@ class NeuralNetworkGraph:
                 run_as_check(feed_dict, loss_value, self.step)
 
     def _has_reached_precision(self, data_sets, precision, batch_size):
-        if precision is not None:
+        if precision is not None and self.step > 0:
             self.do_eval(data_sets.test, batch_size)
             if self.precision > precision:
                 return True
@@ -243,7 +243,7 @@ class NeuralNetworkGraph:
         )
 
     def _initialize_biases(self, out_units_size):
-        return tf.Variable(tf.zeros([out_units_size]), name='biases')
+        return tf.Variable(tf.ones([out_units_size]), name='biases')
 
     def _convert_labels_to_onehot(self, labels):
         """
