@@ -23,12 +23,12 @@ class NeuralNetworkGraph:
         self.output_size = int(output_size)
         self.layer_sizes = self._set_layer_sizes(layer_sizes)
         self.num_hidden_layers = len(self.layer_sizes)-1
+        self.predictor = None
+        self.trainer = None
         self.layers = []
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_size), name='input')
         self.labels_placeholder = tf.placeholder(tf.int32, shape=(None,), name='labels')
-        self.predictor = None
         self.build_neural_network()
-        self.trainer = Trainer(self, learning_rate=CHANGE_THIS_LEARNING_RATE)
 
     def _set_layer_sizes(self, layer_sizes):
         layer_sizes = tuple(filter(None, layer_sizes))
@@ -39,9 +39,6 @@ class NeuralNetworkGraph:
     def build_neural_network(self):
         """Builds a neural network with the given layers and output size.
 
-        Args:
-          input_placeholder: Images placeholder, from inputs().
-
         Returns:
           logits: Output tensor with the computed logits.
         """
@@ -51,21 +48,22 @@ class NeuralNetworkGraph:
         self.layers.append(self.input_placeholder)
         for i in range(1, self.num_hidden_layers+1):
             self.layers.append(
-                self._add_layer(
+                _add_layer(
                     'layer%04d' % i, self.layer_sizes[i-1], self.layer_sizes[i], self.layers[i-1], tf.nn.relu
                 )
             )
 
-        logits = self._add_layer('output', self.layer_sizes[-1], self.output_size, self.layers[-1])
+        self.layers.append(_add_layer('output', self.layer_sizes[-1], self.output_size, self.layers[-1]))
 
-        self.layers.append(logits)
-
-        return logits
+        return self.output_layer()
 
     def output_layer(self):
         return self.layers[-1]
 
     def set_session(self, session=None):
+        if self.trainer is None:
+            self.trainer = Trainer(self, learning_rate=CHANGE_THIS_LEARNING_RATE)
+
         if session is None:
             session = tf.Session()
             init = tf.initialize_all_variables()
@@ -76,6 +74,9 @@ class NeuralNetworkGraph:
             self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
             batch_size=1000
     ):
+        assert self.session is not None, 'called train() before setting up session'
+        assert self.trainer is not None, 'called train() before setting up trainer'
+
         self.trainer.train(data_sets, max_steps, precision, steps_between_checks, run_as_check, batch_size)
 
     def save(self):
@@ -110,12 +111,13 @@ class NeuralNetworkGraph:
             self.predictor = Predictor(self, self.session)
         return self.predictor
 
-    def _add_layer(self, layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
-        with tf.name_scope(layer_name):
-            weights = _initialize_weights(in_units_size, out_units_size)
-            biases = _initialize_biases(out_units_size)
-            new_layer = function(tf.matmul(input_layer, weights) + biases)
-        return new_layer
+
+def _add_layer(layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
+    with tf.name_scope(layer_name):
+        weights = _initialize_weights(in_units_size, out_units_size)
+        biases = _initialize_biases(out_units_size)
+        new_layer = function(tf.matmul(input_layer, weights) + biases)
+    return new_layer
 
 
 def _initialize_weights(in_units_size, out_units_size):

@@ -9,6 +9,7 @@ class Trainer:
         self.graph = graph
         self.learning_rate = learning_rate
         self.build_train_ops()
+        self.step = 0
 
     def build_train_ops(self):
 
@@ -27,10 +28,11 @@ class Trainer:
         self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
         batch_size=1000
     ):
-        assert precision is None or 0. < precision < 1.
-        assert data_sets.train.num_examples % batch_size == 0
+        assert precision is None or 0. <= precision < 1., 'precision must be between 0 and 1 if set'
+        assert data_sets.train.num_examples % batch_size == 0, \
+            'training set size {} not divisible by batch size {}'.format(data_sets.train.num_examples, batch_size)
+        assert self.graph.session is not None, 'graph session not initialized'
 
-        self.step = 0
         while self.step < max_steps and not self._has_reached_precision(data_sets, precision, batch_size):
 
             feed_dict, loss_value = self.run_training_steps(data_sets, steps_between_checks, batch_size)
@@ -125,9 +127,9 @@ class Trainer:
         """Runs one evaluation against the full epoch of data.
 
         Args:
-          session: The session in which the model has been trained.
           data_set: The set of images and labels to evaluate, from
             input_data.read_data_sets().
+          batch_size: number of input data to evaluate concurrently
         """
         self.true_count = 0  # Counts the number of correct predictions.
         steps_per_epoch = data_set.num_examples // batch_size

@@ -24,13 +24,8 @@ class NeuralNetworkGraphTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             NeuralNetworkGraph(2, (2, 1), 2)
 
-    def test_build_neural_network_runs(self):
-        graph = self._create_minimal_graph()
-        # graph.build_neural_network()
-
     def test_build_neural_network_runs_only_once(self):
         graph = self._create_minimal_graph()
-
         with self.assertRaises(AssertionError):
             graph.build_neural_network()
 

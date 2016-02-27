@@ -3,7 +3,8 @@ import math
 
 import tensorflow as tf
 
-from nn_wtf.neural_network_graph import NeuralNetworkGraph
+from nn_wtf.neural_network_graph import NeuralNetworkGraph, CHANGE_THIS_LEARNING_RATE
+from nn_wtf.trainer import Trainer
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 
@@ -37,19 +38,17 @@ class MNISTGraph(NeuralNetworkGraph):
 
         super().__init__(IMAGE_PIXELS, self.hidden, NUM_CLASSES)
 
-        # self.build_neural_network()
-
-        # self.trainer.build_train_ops(self.learning_rate)
-
-        self._setup_summaries()
-
         self.set_session()
-        self.summary_writer = tf.train.SummaryWriter(self.train_dir, graph_def=self.session.graph_def)
+        self._setup_summaries()
 
     def train(
             self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
             batch_size=1000
     ):
+        assert self.summary_op is not None, 'called train() before setting up summary op'
+        assert self.summary_writer is not None, 'called train() before setting up summary writer'
+        assert self.saver is not None, 'called train() before setting up saver'
+
         # run write_summary() after every check, use self.batch_size as batch size
         super().train(
             data_sets, max_steps, precision, steps_between_checks,
@@ -61,24 +60,22 @@ class MNISTGraph(NeuralNetworkGraph):
         self.print_evaluations(data_sets)
 
     def print_evaluations(self, data_sets):
-        if self.verbose: print('Training Data Eval:')
-        self.print_eval(data_sets.train)
-
-        if self.verbose: print('Validation Data Eval:')
-        self.print_eval(data_sets.validation)
-
-        if self.verbose: print('Test Data Eval:')
-        self.print_eval(data_sets.test)
+        self.print_eval(data_sets.train, 'Training Data Eval:')
+        self.print_eval(data_sets.validation, 'Validation Data Eval:')
+        self.print_eval(data_sets.test, 'Test Data Eval:')
 
     def write_summary(self, feed_dict, loss_value, step):
+        assert self.summary_op is not None
+
         if self.verbose:
             print('Step %d: loss = %.2f ' % (step, loss_value))
         # Update the events file.
         summary_str = self.session.run(self.summary_op, feed_dict=feed_dict)
         self.summary_writer.add_summary(summary_str, step)
 
-    def print_eval(self, data_set):
+    def print_eval(self, data_set, message):
         if self.verbose:
+            print(message)
             self.trainer.do_eval(data_set, self.batch_size)
             print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
                   (self.trainer.num_examples, self.trainer.true_count, self.trainer.precision))
@@ -88,6 +85,7 @@ class MNISTGraph(NeuralNetworkGraph):
         self.summary_op = tf.merge_all_summaries()
         # Create a saver for writing training checkpoints.
         self.saver = tf.train.Saver()
+        self.summary_writer = tf.train.SummaryWriter(self.train_dir, graph_def=self.session.graph_def)
 
 
 def ensure_is_dir(train_dir_string):
