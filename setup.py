@@ -13,7 +13,7 @@ except ImportError:
 
 setup(
     name='nn_wtf',
-    version='0.1.5',
+    version='0.1.6',
     description='Neural Networks Wrapper for TensorFlow',
     long_description=read_md('README.md'),
     classifiers=[

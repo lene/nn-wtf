@@ -93,8 +93,8 @@ class NeuralNetworkOptimizer:
             )
             graph.set_session()
             graph.train(
-                data_sets, max_steps, precision=self.training_precision, steps_between_checks=50,
-                batch_size=self.batch_size
+                data_sets, max_steps,
+                precision=self.training_precision, steps_between_checks=50, batch_size=self.batch_size
             )
         return graph
 
