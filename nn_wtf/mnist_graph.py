@@ -37,9 +37,9 @@ class MNISTGraph(NeuralNetworkGraph):
 
         super().__init__(IMAGE_PIXELS, self.hidden, NUM_CLASSES)
 
-        self.build_neural_network()
+        # self.build_neural_network()
 
-        self.build_train_ops(self.learning_rate)
+        # self.trainer.build_train_ops(self.learning_rate)
 
         self._setup_summaries()
 
@@ -79,9 +79,9 @@ class MNISTGraph(NeuralNetworkGraph):
 
     def print_eval(self, data_set):
         if self.verbose:
-            self.do_eval(data_set, self.batch_size)
+            self.trainer.do_eval(data_set, self.batch_size)
             print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
-                  (self.num_examples, self.true_count, self.precision))
+                  (self.trainer.num_examples, self.trainer.true_count, self.trainer.precision))
 
     def _setup_summaries(self):
         # Build the summary operation based on the TF collection of Summaries.

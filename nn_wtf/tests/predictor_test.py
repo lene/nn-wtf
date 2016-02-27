@@ -22,8 +22,6 @@ class PredictorTest(unittest.TestCase):
 def train_neural_network(train_data):
     data_sets = DataSets(train_data, train_data, train_data)
     graph = NeuralNetworkGraph(train_data.input.shape[0], MINIMAL_LAYER_GEOMETRY, len(train_data.labels))
-    graph.build_neural_network()
-    graph.build_train_ops(0.1)
     graph.set_session()
     graph.train(
         data_sets=data_sets, steps_between_checks=50, max_steps=1000, batch_size=train_data.num_examples,

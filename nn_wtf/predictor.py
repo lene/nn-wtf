@@ -32,7 +32,7 @@ class Predictor:
     def _setup_prediction(self):
         if self.prediction_op is not None:
             return
-        output = self.graph.layers[-1]
+        output = self.graph.output_layer()
         self.prediction_op = tf.argmax(output, 1)
         positive_output = output - tf.reduce_min(output, 1)
         self.probabilities_op = positive_output / tf.reduce_sum(positive_output, 1)

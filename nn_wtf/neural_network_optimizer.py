@@ -73,7 +73,7 @@ class NeuralNetworkOptimizer:
 
     def timed_run_training(self, data_sets, layer1_size, layer2_size, layer3_size, max_steps=10000):
         graph, cpu, wall = timed_run(self.run_training_once, data_sets, layer1_size, layer2_size, layer3_size, max_steps)
-        return self.TimingInfo(cpu, wall, graph.precision, graph.step, (layer1_size, layer2_size, layer3_size))
+        return self.TimingInfo(cpu, wall, graph.trainer.precision, graph.trainer.step, (layer1_size, layer2_size, layer3_size))
 
     def run_training_once(self, data_sets, layer1_size, layer2_size, layer3_size, max_steps):
         # Tell TensorFlow that the model will be built into the default Graph.
