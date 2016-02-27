@@ -5,18 +5,22 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 class Predictor:
 
-    def __init__(self, graph):
+    def __init__(self, graph, session):
+
+        assert isinstance(session, tf.Session)
+
         self.graph = graph
+        self.session = session
         self.prediction_op = None
         self.probabilities_op = None
         self._setup_prediction()
 
-    def predict(self, session, image):
-        predictions = self._run_prediction_op(image, session)
+    def predict(self, image):
+        predictions = self._run_prediction_op(image, self.session)
         return predictions[0][0]
 
-    def prediction_probabilities(self, session, image):
-        predictions = self._run_prediction_op(image, session)
+    def prediction_probabilities(self, image):
+        predictions = self._run_prediction_op(image, self.session)
         return predictions[1][0]
 
     def _run_prediction_op(self, image, session):
@@ -26,8 +30,9 @@ class Predictor:
         return best
 
     def _setup_prediction(self):
-        if self.prediction_op is None:
-            output = self.graph.layers[-1]
-            self.prediction_op = tf.argmax(output, 1)
-            positive_output = output - tf.reduce_min(output, 1)
-            self.probabilities_op = positive_output / tf.reduce_sum(positive_output, 1)
+        if self.prediction_op is not None:
+            return
+        output = self.graph.layers[-1]
+        self.prediction_op = tf.argmax(output, 1)
+        positive_output = output - tf.reduce_min(output, 1)
+        self.probabilities_op = positive_output / tf.reduce_sum(positive_output, 1)

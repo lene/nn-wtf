@@ -52,7 +52,7 @@ def run_training():
 
     graph, cpu, wall = timed_run(run_final_training, geometry, data_sets)
 
-    print(NeuralNetworkOptimizer.TimingInfo(cpu, wall, graph.graph.precision, graph.graph.step, geometry))
+    print(NeuralNetworkOptimizer.TimingInfo(cpu, wall, graph.precision, graph.step, geometry))
 
     return graph
 
@@ -101,17 +101,17 @@ def main(_):
             graph = run_training()
             image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
             print(
-                'actual number: 7, prediction:', graph.predict(image_data),
-                'predicted probabilities:', graph.prediction_probabilities(image_data)
+                'actual number: 7, prediction:', graph.get_predictor().predict(image_data),
+                'predicted probabilities:', graph.get_predictor().prediction_probabilities(image_data)
             )
             image_data = id.read_one_image_from_url(
                 'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
             )
-            prediction = graph.predict(image_data)
+            prediction = graph.get_predictor().predict(image_data)
             print('actual number: 7, prediction:', prediction)
             for i in range(10):
                 image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
-                prediction = graph.predict(image_data)
+                prediction = graph.get_predictor().predict(image_data)
                 print(i, prediction)
 
 
@@ -121,8 +121,8 @@ def perform_self_test():
         (32, 32, None), DATA_SETS, steps_between_checks=50, learning_rate=0.1, desired_precision=0.8
     )
     image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
-    prediction = graph.predict(image_data)
-    probabilities = graph.prediction_probabilities(image_data)
+    prediction = graph.get_predictor().predict(image_data)
+    probabilities = graph.get_predictor().prediction_probabilities(image_data)
     print(
         'actual number: 7, prediction:', prediction,
         'predicted probabilities:', probabilities

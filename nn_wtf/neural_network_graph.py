@@ -91,13 +91,16 @@ class NeuralNetworkGraph:
             self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
             batch_size=1000
     ):
+        assert precision is None or 0. < precision < 1.
+
         self.step = 0
         while self.step < max_steps and not self._has_reached_precision(data_sets, precision, batch_size):
 
             feed_dict, loss_value = self.run_training_steps(data_sets, steps_between_checks, batch_size)
             self.step += steps_between_checks
 
-            run_as_check(feed_dict, loss_value, self.step)
+            if run_as_check is not None:
+                run_as_check(feed_dict, loss_value, self.step)
 
     def _has_reached_precision(self, data_sets, precision, batch_size):
         if precision is not None:
@@ -228,10 +231,11 @@ class NeuralNetworkGraph:
         # Return the number of true entries.
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
-    def predict(self, session, image):
+    def get_predictor(self):
+        assert self.session is not None, 'called predictor before setting up a session'
         if self.predictor is None:
-            self.predictor = Predictor(self)
-        return self.predictor.predict(session, image)
+            self.predictor = Predictor(self, self.session)
+        return self.predictor
 
     def _add_layer(self, layer_name, in_units_size, out_units_size, input_layer, function=lambda x: x):
         with tf.name_scope(layer_name):

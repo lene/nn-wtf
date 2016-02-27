@@ -18,7 +18,7 @@ IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 DEFAULT_TRAIN_DIR='.nn_wtf-data'
 
 
-class MNISTGraph:
+class MNISTGraph(NeuralNetworkGraph):
 
     def __init__(
         self, verbose=True,
@@ -34,19 +34,25 @@ class MNISTGraph:
         self.train_dir = ensure_is_dir(train_dir)
 
         self.step = 0
+        images_placeholder, labels_placeholder = placeholder_inputs(self.batch_size)
 
-        self._build_graph()
+        super().__init__(images_placeholder.get_shape()[1], self.hidden, NUM_CLASSES)
+
+        self.build_neural_network(images_placeholder)
+
+        self.build_train_ops(labels_placeholder, self.learning_rate)
+
         self._setup_summaries()
 
-    def train(self, data_sets, max_steps, precision=None, steps_between_checks=100):
+        self.set_session()
+        self.summary_writer = tf.train.SummaryWriter(self.train_dir, graph_def=self.session.graph_def)
 
-        assert precision is None or 0. < precision < 1.
-
-        self.session = self.initialize_session()
-        self.graph.set_session(self.session)
-
-        # And then after everything is built, start the training loop.
-        self.graph.train(
+    def train(
+            self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
+            batch_size=1000
+    ):
+        # run write_summary() after every check, use self.batch_size as batch size
+        super().train(
             data_sets, max_steps, precision, steps_between_checks,
             run_as_check=self.write_summary, batch_size=self.batch_size
         )
@@ -65,54 +71,23 @@ class MNISTGraph:
         if self.verbose: print('Test Data Eval:')
         self.print_eval(data_sets.test)
 
-    def initialize_session(self):
-        # Create a session for running Ops on the Graph.
-        sess = tf.Session()
-        # Run the Op to initialize the variables.
-        init = tf.initialize_all_variables()
-        sess.run(init)
-        # Instantiate a SummaryWriter to output summaries and the Graph.
-        self.summary_writer = tf.train.SummaryWriter(self.train_dir, graph_def=sess.graph_def)
-        return sess
-
     def write_summary(self, feed_dict, loss_value, step):
-        # Print status to stdout.
         if self.verbose:
             print('Step %d: loss = %.2f ' % (step, loss_value))
         # Update the events file.
         summary_str = self.session.run(self.summary_op, feed_dict=feed_dict)
         self.summary_writer.add_summary(summary_str, step)
 
-
     def print_eval(self, data_set):
-        self.graph.do_eval(data_set, self.batch_size)
         if self.verbose:
+            self.do_eval(data_set, self.batch_size)
             print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
-                  (self.graph.num_examples, self.graph.true_count, self.graph.precision))
+                  (self.num_examples, self.true_count, self.precision))
 
     def evaluate_new_data_set(self, data_set):
         self.batch_size = data_set.num_examples
         self.num_examples = data_set.num_examples
         self.print_eval(data_set)
-
-    def predict(self, image):
-        return self.graph.predict(self.session, image)
-
-    def prediction_probabilities(self, image):
-        return self.graph.predictor.prediction_probabilities(self.session, image)
-
-    def _build_graph(self):
-        # Generate placeholders for the images and labels.
-        self.images_placeholder, self.labels_placeholder = placeholder_inputs(self.batch_size)
-
-        self.graph = NeuralNetworkGraph(
-            self.images_placeholder.get_shape()[1], self.hidden, NUM_CLASSES
-        )
-
-        # Build a Graph that computes predictions from the inference model.
-        self.graph.build_neural_network(self.images_placeholder)
-
-        self.graph.build_train_ops(self.labels_placeholder, self.learning_rate)
 
     def _setup_summaries(self):
         # Build the summary operation based on the TF collection of Summaries.

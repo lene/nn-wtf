@@ -2,6 +2,8 @@ import time
 import pprint
 import tensorflow as tf
 
+from nn_wtf.neural_network_graph import NeuralNetworkGraph
+
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 
 
@@ -37,6 +39,7 @@ class NeuralNetworkOptimizer:
             return {'cpu_time': self.cpu_time, 'step': self.step, 'layers': self.layers}
 
     def __init__(self, tested_network, training_precision, layer_sizes=None, learning_rate=None, verbose=False):
+        assert issubclass(tested_network, NeuralNetworkGraph)
         self.tested_network = tested_network
         self.verbose = verbose
         self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
@@ -70,7 +73,7 @@ class NeuralNetworkOptimizer:
 
     def timed_run_training(self, data_sets, layer1_size, layer2_size, layer3_size, max_steps=10000):
         graph, cpu, wall = timed_run(self.run_training_once, data_sets, layer1_size, layer2_size, layer3_size, max_steps)
-        return self.TimingInfo(cpu, wall, graph.graph.precision, graph.step, (layer1_size, layer2_size, layer3_size))
+        return self.TimingInfo(cpu, wall, graph.precision, graph.step, (layer1_size, layer2_size, layer3_size))
 
     def run_training_once(self, data_sets, layer1_size, layer2_size, layer3_size, max_steps):
         # Tell TensorFlow that the model will be built into the default Graph.
