@@ -35,15 +35,15 @@ documentation will be ready by the time this package reaches alpha status.
 ### List of useful classes and methods
 
 * `NeuralNetworkGraph`: Base class for defining and training neural networks
-** `__init__(self, input_size, layer_sizes, output_size, learning_rate)`
-** `set_session(self, session=None)`
-** `train(self, data_sets, max_steps, precision, steps_between_checks, run_as_check, batch_size)`
-** `get_predictor().predict(input_data)`
+  * `__init__(self, input_size, layer_sizes, output_size, learning_rate)`
+  * `set_session(self, session=None)`
+  * `train(self, data_sets, max_steps, precision, steps_between_checks, run_as_check, batch_size)`
+  * `get_predictor().predict(input_data)`
 * `MNISTGraph`: Subclass of NeuralNetworkGraph suitable for working on MNIST data
 * `NeuralNetworkOptimizer`: Optimize geometry of a neural network for fast training
-** `__init__( self, tested_network, input_size, output_size, training_precision,
+  * `__init__( self, tested_network, input_size, output_size, training_precision,
             layer_sizes, learning_rate, verbose, batch_size)`
-** `brute_force_optimal_network_geometry(self, data_sets, max_steps)`
+  * `brute_force_optimal_network_geometry(self, data_sets, max_steps)`
 
 ### Usage example
 
