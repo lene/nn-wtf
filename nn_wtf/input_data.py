@@ -22,7 +22,7 @@ import numpy
 
 from nn_wtf.data_sets import DataSets
 from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
-from nn_wtf.mnist_graph import IMAGE_SIZE
+from nn_wtf.mnist_graph import MNISTGraph
 
 import urllib.request
 
@@ -78,7 +78,7 @@ def read_one_image_from_url(url):
 
 
 def read_one_image_from_bytestream(bytestream):
-    rows, cols = IMAGE_SIZE, IMAGE_SIZE
+    rows, cols = MNISTGraph.IMAGE_SIZE, MNISTGraph.IMAGE_SIZE
     return images_from_bytestream(bytestream, rows, cols, 1)
 
 

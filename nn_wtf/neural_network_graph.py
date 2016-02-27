@@ -13,7 +13,7 @@ CHANGE_THIS_LEARNING_RATE = 0.1
 
 class NeuralNetworkGraph:
 
-    def __init__(self, input_size, layer_sizes, output_size):
+    def __init__(self, input_size, layer_sizes, output_size, learning_rate=CHANGE_THIS_LEARNING_RATE):
         """
         Args:
           input_size: number of input channels
@@ -21,6 +21,7 @@ class NeuralNetworkGraph:
           output_size: Number of output channels.
         """
         self._setup_geometry(input_size, layer_sizes, output_size)
+        self.learning_rate = learning_rate
         self.predictor = None
         self.trainer = None
         self.layers = []
@@ -33,7 +34,7 @@ class NeuralNetworkGraph:
 
     def set_session(self, session=None):
         if self.trainer is None:
-            self.trainer = Trainer(self, learning_rate=CHANGE_THIS_LEARNING_RATE)
+            self.trainer = Trainer(self, learning_rate=self.learning_rate)
 
         if session is None:
             session = _initialize_session()

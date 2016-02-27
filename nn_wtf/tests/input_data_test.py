@@ -1,7 +1,7 @@
 from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
 from nn_wtf.input_data import read_one_image_from_file
 
-from nn_wtf.mnist_graph import IMAGE_SIZE
+from nn_wtf.mnist_graph import MNISTGraph
 
 from .util import get_project_root_folder
 
@@ -21,8 +21,8 @@ class InputDataTest(unittest.TestCase):
         self.assertIsInstance(self.data, numpy.ndarray)
         self.assertEqual(4, len(self.data.shape))
         self.assertEqual(1, self.data.shape[0])
-        self.assertEqual(IMAGE_SIZE, self.data.shape[1])
-        self.assertEqual(IMAGE_SIZE, self.data.shape[2])
+        self.assertEqual(MNISTGraph.IMAGE_SIZE, self.data.shape[1])
+        self.assertEqual(MNISTGraph.IMAGE_SIZE, self.data.shape[2])
         self.assertEqual(1, self.data.shape[3])
 
     def test_image_labels_data_set_from_image(self):

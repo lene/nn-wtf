@@ -77,12 +77,12 @@ def run_final_training(
 ):
     graph = MNISTGraph(
             learning_rate=learning_rate,
-            hidden1=geometry[0], hidden2=geometry[1], hidden3=geometry[2],
-            batch_size=FLAGS.batch_size, train_dir=FLAGS.train_dir
+            layer_sizes=geometry,
+            train_dir=FLAGS.train_dir
         )
     graph.train(
         data_sets, max_steps,
-        precision=desired_precision, steps_between_checks=steps_between_checks
+        precision=desired_precision, steps_between_checks=steps_between_checks, batch_size=FLAGS.batch_size
     )
     return graph
 
@@ -133,7 +133,8 @@ def iterate_over_precisions(filename=None, self_test=False):
     for precision in precisions:
         with tf.Graph().as_default():
             optimizer = NeuralNetworkOptimizer(
-                MNISTGraph, precision, layer_sizes=layer_sizes, learning_rate=0.1, verbose=True
+                MNISTGraph, MNISTGraph.IMAGE_PIXELS, MNISTGraph.NUM_CLASSES, precision,
+                layer_sizes=layer_sizes, learning_rate=0.1, verbose=True
             )
             results = optimizer.time_all_tested_geometries(DATA_SETS, max(FLAGS.max_steps, 200000))
             final_results[precision] = results

@@ -38,9 +38,15 @@ class NeuralNetworkOptimizer:
         def __dict__(self):
             return {'cpu_time': self.cpu_time, 'step': self.step, 'layers': self.layers}
 
-    def __init__(self, tested_network, training_precision, layer_sizes=None, learning_rate=None, verbose=False):
+    def __init__(
+            self, tested_network, input_size, output_size, training_precision,
+            layer_sizes=None, learning_rate=None, verbose=False, batch_size=100
+    ):
         assert issubclass(tested_network, NeuralNetworkGraph)
         self.tested_network = tested_network
+        self.input_size = input_size
+        self.output_size = output_size
+        self.batch_size = batch_size
         self.verbose = verbose
         self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
         self.training_precision = training_precision
@@ -52,9 +58,9 @@ class NeuralNetworkOptimizer:
 
     def time_all_tested_geometries(self, data_sets, max_steps):
         results = []
-        for layer1_size, layer2_size, layer3_size in self.get_network_geometries():
+        for geometry in self.get_network_geometries():
             run_info = self.timed_run_training(
-                data_sets, layer1_size, layer2_size, layer3_size, max_steps=max_steps
+                data_sets, geometry, max_steps=max_steps
             )
             if self.verbose: print(run_info)
             results.append(run_info)
@@ -71,19 +77,24 @@ class NeuralNetworkOptimizer:
     def brute_force_optimize_learning_rate(self):
         raise NotImplemented()
 
-    def timed_run_training(self, data_sets, layer1_size, layer2_size, layer3_size, max_steps=10000):
-        graph, cpu, wall = timed_run(self.run_training_once, data_sets, layer1_size, layer2_size, layer3_size, max_steps)
-        return self.TimingInfo(cpu, wall, graph.trainer.precision, graph.trainer.step, (layer1_size, layer2_size, layer3_size))
+    def timed_run_training(self, data_sets, geometry, max_steps=10000):
+        graph, cpu, wall = timed_run(self.run_training_once, data_sets, geometry, max_steps)
+        return self.TimingInfo(cpu, wall, graph.trainer.precision, graph.trainer.step, geometry)
 
-    def run_training_once(self, data_sets, layer1_size, layer2_size, layer3_size, max_steps):
+    def run_training_once(self, data_sets, geometry, max_steps):
         # Tell TensorFlow that the model will be built into the default Graph.
         with tf.Graph().as_default():
             graph = self.tested_network(
-                learning_rate=self.learning_rate,
-                hidden1=layer1_size, hidden2=layer2_size, hidden3=layer3_size,
-                verbose=False
+                input_size=self.input_size,
+                layer_sizes=geometry,
+                output_size=self.output_size,
+                learning_rate=self.learning_rate
             )
-            graph.train(data_sets, max_steps, precision=self.training_precision, steps_between_checks=50)
+            graph.set_session()
+            graph.train(
+                data_sets, max_steps, precision=self.training_precision, steps_between_checks=50,
+                batch_size=self.batch_size
+            )
         return graph
 
 
