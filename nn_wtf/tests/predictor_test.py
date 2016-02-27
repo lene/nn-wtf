@@ -4,9 +4,8 @@ from nn_wtf.tests.util import MINIMAL_LAYER_GEOMETRY, create_train_data_set, tra
 
 import unittest
 
-from nn_wtf.trainer import Trainer
-
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
+# pylint: disable=missing-docstring
 
 
 class PredictorTest(unittest.TestCase):

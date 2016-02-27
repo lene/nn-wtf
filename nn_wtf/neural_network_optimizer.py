@@ -8,6 +8,7 @@ __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
 
 
 class NeuralNetworkOptimizer:
+    """Attempts to find the best parameters to a neural network to be trained in the fastest way."""
 
     DEFAULT_LEARNING_RATE = 0.1
     DEFAULT_LAYER_SIZES = (
@@ -75,7 +76,7 @@ class NeuralNetworkOptimizer:
                 for l3 in self.layer_sizes[2] if l3 is None or l3 <= l2)
 
     def brute_force_optimize_learning_rate(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def timed_run_training(self, data_sets, geometry, max_steps=10000):
         graph, cpu, wall = timed_run(self.run_training_once, data_sets, geometry, max_steps)
@@ -99,6 +100,6 @@ class NeuralNetworkOptimizer:
 
 
 def timed_run(function, *args, **kwargs):
-        start_cpu_time, start_wall_time = time.process_time(), time.time()
-        returned = function(*args, **kwargs)
-        return returned, time.process_time()-start_cpu_time, time.time()-start_wall_time
+    start_cpu_time, start_wall_time = time.process_time(), time.time()
+    returned = function(*args, **kwargs)
+    return returned, time.process_time()-start_cpu_time, time.time()-start_wall_time

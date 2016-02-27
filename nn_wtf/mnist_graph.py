@@ -1,4 +1,4 @@
-from nn_wtf.neural_network_graph import NeuralNetworkGraph
+from nn_wtf.neural_network_graph import NeuralNetworkGraph, CHANGE_THIS_LEARNING_RATE
 from nn_wtf.neural_network_graph_mixins import SaverMixin, DEFAULT_TRAIN_DIR, SummaryWriterMixin
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
@@ -14,11 +14,19 @@ class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
     IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
     def __init__(
-        self, verbose=True,
-        learning_rate=0.01, layer_sizes=(128, 32, None),
+        self, input_size=None, layer_sizes=(128, 32, None), output_size=None, learning_rate=CHANGE_THIS_LEARNING_RATE,
+        verbose=True,
         train_dir=DEFAULT_TRAIN_DIR,
-        input_size=None, output_size=None
     ):
+        """The MNISTGraph constructor takes no positional args, in contrast with NeuralNetworkGraph.
+
+        :param input_size: ignored, present for client compatibility
+        :param layer_sizes: tuple of sizes of the neural network hidden layers
+        :param output_size: ignored, present for client compatibility
+        :param learning_rate: learning rate for gradient descent optimizer
+        :param verbose: whether to print some info about the training progress
+        :param train_dir: where to write savepoints and summaries
+        """
         NeuralNetworkGraph.__init__(
             self, self.IMAGE_PIXELS, layer_sizes, self.NUM_CLASSES, learning_rate
         )

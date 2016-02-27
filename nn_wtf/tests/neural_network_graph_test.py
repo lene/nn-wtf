@@ -7,6 +7,7 @@ import tensorflow as tf
 import unittest
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+# pylint: disable=missing-docstring
 
 
 class NeuralNetworkGraphTest(unittest.TestCase):

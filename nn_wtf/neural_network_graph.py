@@ -14,11 +14,12 @@ CHANGE_THIS_LEARNING_RATE = 0.1
 class NeuralNetworkGraph:
 
     def __init__(self, input_size, layer_sizes, output_size, learning_rate=CHANGE_THIS_LEARNING_RATE):
-        """
-        Args:
-          input_size: number of input channels
-          layer_sizes: Sizes of hidden layers in a tuple or list.
-          output_size: Number of output channels.
+        """Initialize a neural network given its geometry.
+
+        :param input_size: number of input channels
+        :param layer_sizes: tuple of sizes of the neural network hidden layers
+        :param output_size: number of output classes
+        :param learning_rate: learning rate for gradient descent optimizer
         """
         self._setup_geometry(input_size, layer_sizes, output_size)
         self.learning_rate = learning_rate
@@ -59,11 +60,8 @@ class NeuralNetworkGraph:
               ....
         }
 
-        Args:
-          data_set: The set of images and labels, from input_data.read_data_sets()
-
-        Returns:
-          feed_dict: The feed dictionary mapping from placeholders to values.
+        :param data_set: The set of images and labels, from input_data.read_data_sets()
+        :return The feed dictionary mapping from placeholders to values.
         """
         # Create the feed_dict for the placeholders filled with the next `batch size ` examples.
         input_feed, labels_feed = data_set.next_batch(batch_size)
@@ -94,8 +92,7 @@ class NeuralNetworkGraph:
     def _build_neural_network(self):
         """Builds a neural network with the given layers and output size.
 
-        Returns:
-          logits: Output tensor with the computed logits.
+        :return Output tensor with the computed logits.
         """
 
         assert self.layers == [], 'build_neural_network() has been called before'

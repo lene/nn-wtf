@@ -7,6 +7,7 @@ from nn_wtf.tests.util import create_train_data_set
 import unittest
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
+# pylint: disable=missing-docstring
 
 
 class NeuralNetworkOptimizerTest(unittest.TestCase):

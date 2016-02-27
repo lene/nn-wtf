@@ -6,6 +6,7 @@ import numpy
 import unittest
 
 __author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+# pylint: disable=missing-docstring
 
 NUM_TRAINING_SAMPLES = 20
 IMAGE_WIDTH = 10

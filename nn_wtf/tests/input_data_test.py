@@ -10,6 +10,7 @@ import numpy
 import unittest
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
+# pylint: disable=missing-docstring
 
 
 class InputDataTest(unittest.TestCase):

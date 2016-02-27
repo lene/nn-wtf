@@ -30,35 +30,35 @@ SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 
 
 def maybe_download(filename, work_directory):
-  """Download the data from Yann's website, unless it's already here."""
-  if not os.path.exists(work_directory):
-    os.mkdir(work_directory)
-  filepath = os.path.join(work_directory, filename)
-  if not os.path.exists(filepath):
-    filepath, _ = urllib.request.urlretrieve(SOURCE_URL + filename, filepath)
-    statinfo = os.stat(filepath)
-    print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
-  return filepath
+    """Download the data from Yann's website, unless it's already here."""
+    if not os.path.exists(work_directory):
+      os.mkdir(work_directory)
+    filepath = os.path.join(work_directory, filename)
+    if not os.path.exists(filepath):
+        filepath, _ = urllib.request.urlretrieve(SOURCE_URL + filename, filepath)
+        statinfo = os.stat(filepath)
+        print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
+    return filepath
 
 
 def _read32(bytestream):
-  dt = numpy.dtype(numpy.uint32).newbyteorder('>')
-  return numpy.frombuffer(bytestream.read(4), dtype=dt)[0]
+    dt = numpy.dtype(numpy.uint32).newbyteorder('>')
+    return numpy.frombuffer(bytestream.read(4), dtype=dt)[0]
 
 
 def extract_images(filename):
-  """Extract the images into a 4D uint8 numpy array [index, y, x, depth]."""
-  print('Extracting', filename)
-  with gzip.open(filename) as bytestream:
-    magic = _read32(bytestream)
-    if magic != 2051:
-      raise ValueError(
-          'Invalid magic number %d in MNIST image file: %s' %
-          (magic, filename))
-    num_images = _read32(bytestream)
-    rows = _read32(bytestream)
-    cols = _read32(bytestream)
-    return images_from_bytestream(bytestream, rows, cols, num_images)
+    """Extract the images into a 4D uint8 numpy array [index, y, x, depth]."""
+    print('Extracting', filename)
+    with gzip.open(filename) as bytestream:
+        magic = _read32(bytestream)
+        if magic != 2051:
+            raise ValueError(
+                'Invalid magic number %d in MNIST image file: %s' %
+                (magic, filename))
+        num_images = _read32(bytestream)
+        rows = _read32(bytestream)
+        cols = _read32(bytestream)
+        return images_from_bytestream(bytestream, rows, cols, num_images)
 
 
 def images_from_bytestream(bytestream, rows, cols, num_images):
@@ -92,20 +92,20 @@ def dense_to_one_hot(labels_dense, num_classes=10):
 
 
 def extract_labels(filename, one_hot=False):
-  """Extract the labels into a 1D uint8 numpy array [index]."""
-  print('Extracting', filename)
-  with gzip.open(filename) as bytestream:
-    magic = _read32(bytestream)
-    if magic != 2049:
-      raise ValueError(
-          'Invalid magic number %d in MNIST label file: %s' %
-          (magic, filename))
-    num_items = _read32(bytestream)
-    buf = bytestream.read(num_items)
-    labels = numpy.frombuffer(buf, dtype=numpy.uint8)
-    if one_hot:
-      return dense_to_one_hot(labels)
-    return labels
+    """Extract the labels into a 1D uint8 numpy array [index]."""
+    print('Extracting', filename)
+    with gzip.open(filename) as bytestream:
+        magic = _read32(bytestream)
+        if magic != 2049:
+            raise ValueError(
+                'Invalid magic number %d in MNIST label file: %s' %
+                (magic, filename))
+        num_items = _read32(bytestream)
+        buf = bytestream.read(num_items)
+        labels = numpy.frombuffer(buf, dtype=numpy.uint8)
+        if one_hot:
+            return dense_to_one_hot(labels)
+        return labels
 
 
 TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
