@@ -22,8 +22,9 @@ class NeuralNetworkGraph:
         self.num_hidden_layers = len(self.layer_sizes)-1
         self.layers = []
         self.predictor = None
-        self.input_placeholder = None
-        self.labels_placeholder = None
+        self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_size), name='input')
+        self.labels_placeholder = tf.placeholder(tf.int32, shape=(None,), name='labels')
+
 
     def _set_layer_sizes(self, layer_sizes):
         layer_sizes = tuple(filter(None, layer_sizes))
@@ -31,7 +32,7 @@ class NeuralNetworkGraph:
             raise ValueError('Last layer size must be greater or equal output size')
         return (self.input_size,) + layer_sizes
 
-    def build_neural_network(self, input_placeholder):
+    def build_neural_network(self):
         """Builds a neural network with the given layers and output size.
 
         Args:
@@ -41,16 +42,9 @@ class NeuralNetworkGraph:
           logits: Output tensor with the computed logits.
         """
 
-        assert isinstance(input_placeholder, tf.Tensor), 'input placeholder not a tf.Tensor'
-        assert self.input_size == int(input_placeholder.get_shape()[1]), \
-            'declared input size {} not matching input placehoder shape {}'.format(
-                self.input_size, int(input_placeholder.get_shape()[1])
-            )
         assert self.layers == [], 'build_neural_network() has been called before'
 
-        self.input_placeholder = input_placeholder
-
-        self.layers.append(input_placeholder)
+        self.layers.append(self.input_placeholder)
         for i in range(1, self.num_hidden_layers+1):
             self.layers.append(
                 self._add_layer(
@@ -64,21 +58,18 @@ class NeuralNetworkGraph:
 
         return logits
 
-    def build_train_ops(self, labels_placeholder, learning_rate):
+    def build_train_ops(self, learning_rate):
 
-        assert isinstance(labels_placeholder, tf.Tensor), 'labels placeholder not a tf.Tensor'
         assert len(self.layers) > 0, 'build_neural_network() needs to be called first'
 
-        self.labels_placeholder = labels_placeholder
-
         # Add to the Graph the Ops for loss calculation.
-        self.loss_op = self.loss(self.layers[-1], labels_placeholder)
+        self.loss_op = self.loss(self.layers[-1], self.labels_placeholder)
 
         # Add to the Graph the Ops that calculate and apply gradients.
         self.train_op = self.training(self.loss_op, learning_rate)
 
         # Add the Op to compare the logits to the labels during evaluation.
-        self.eval_correct_op = self.evaluation(self.layers[-1], labels_placeholder)
+        self.eval_correct_op = self.evaluation(self.layers[-1], self.labels_placeholder)
 
     def set_session(self, session=None):
         if session is None:

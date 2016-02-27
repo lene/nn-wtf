@@ -15,7 +15,7 @@ class PredictorTest(unittest.TestCase):
 
     def test_simple_case(self):
         graph = NeuralNetworkGraph(MINIMAL_INPUT_SIZE, MINIMAL_LAYER_GEOMETRY, MINIMAL_OUTPUT_SIZE)
-        output = graph.build_neural_network(create_minimal_input_placeholder())
+        output = graph.build_neural_network()
         train_data = [[0, 0], [1, 1]]
         train_labels = [0, 1]
 

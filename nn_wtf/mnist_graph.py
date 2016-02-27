@@ -34,13 +34,12 @@ class MNISTGraph(NeuralNetworkGraph):
         self.train_dir = ensure_is_dir(train_dir)
 
         self.step = 0
-        images_placeholder, labels_placeholder = placeholder_inputs(self.batch_size)
 
-        super().__init__(images_placeholder.get_shape()[1], self.hidden, NUM_CLASSES)
+        super().__init__(IMAGE_PIXELS, self.hidden, NUM_CLASSES)
 
-        self.build_neural_network(images_placeholder)
+        self.build_neural_network()
 
-        self.build_train_ops(labels_placeholder, self.learning_rate)
+        self.build_train_ops(self.learning_rate)
 
         self._setup_summaries()
 
@@ -101,27 +100,4 @@ def ensure_is_dir(train_dir_string):
     if not train_dir_string[-1] == '/':
         train_dir_string += '/'
     return train_dir_string
-
-
-def placeholder_inputs(batch_size):
-    """Generate placeholder variables to represent the input tensors.
-
-    These placeholders are used as inputs by the rest of the model building
-    code and will be fed from the downloaded data in the .run() loop, below.
-
-    Args:
-      batch_size: The batch size will be baked into both placeholders.
-
-    Returns:
-      images_placeholder: Images placeholder.
-      labels_placeholder: Labels placeholder.
-    """
-    # Note that the shapes of the placeholders match the shapes of the full image and label
-    # tensors, except the first dimension is now batch_size rather than the full size of
-    # the train or test data sets.
-    # images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, IMAGE_PIXELS))
-    images_placeholder = tf.placeholder(tf.float32, shape=(None, IMAGE_PIXELS), name='images')
-    # labels_placeholder = tf.placeholder(tf.int32, shape=batch_size)
-    labels_placeholder = tf.placeholder(tf.int32, shape=(None,), name='labels')
-    return images_placeholder, labels_placeholder
 
