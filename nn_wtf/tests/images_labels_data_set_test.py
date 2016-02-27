@@ -12,6 +12,7 @@ IMAGE_WIDTH = 10
 IMAGE_HEIGHT = 10
 BATCH_SIZE = 5
 
+
 class ImagesLabelsDataSetTest(unittest.TestCase):
 
     def test_init_without_fake_data_runs(self):
@@ -71,6 +72,7 @@ def create_empty_image_data():
 
 def create_empty_label_data():
     return create_empty_label_dataof_size(NUM_TRAINING_SAMPLES)
+
 
 def create_empty_label_dataof_size(size):
     buf = [0] * size

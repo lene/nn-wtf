@@ -9,7 +9,7 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 class PredictorTest(unittest.TestCase):
 
-    def test_prediction_functions_at_once_to_save_computing_time(self):
+    def test_all_prediction_functions_at_once_to_save_computing_time(self):
         graph = train_neural_network(create_train_data_set())
         self.assertEqual(0, graph.get_predictor().predict(train_data_input(0)))
         self.assertEqual(1, graph.get_predictor().predict(train_data_input(1)))

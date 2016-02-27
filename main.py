@@ -39,7 +39,6 @@ flags.DEFINE_integer('hidden2', 32, 'Number of units in hidden layer 2.')
 flags.DEFINE_integer('hidden3', None, 'Number of units in hidden layer 3.')
 flags.DEFINE_integer('batch_size', 100, 'Batch size. Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', '.nn_wtf-data', 'Directory to put the training data.')
-flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data for unit testing.')
 flags.DEFINE_boolean('list_precisions', False, 'If true, call optimizer for several precisions.')
 
 
@@ -100,10 +99,8 @@ def main(_):
         with tf.Graph().as_default():
             graph = run_training()
             image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
-            print(
-                'actual number: 7, prediction:', graph.get_predictor().predict(image_data),
-                'predicted probabilities:', graph.get_predictor().prediction_probabilities(image_data)
-            )
+            print('actual number: 7, prediction:', graph.get_predictor().predict(image_data))
+            print('predicted probabilities:', graph.get_predictor().prediction_probabilities(image_data))
             image_data = id.read_one_image_from_url(
                 'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
             )
@@ -123,10 +120,8 @@ def perform_self_test():
     image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
     prediction = graph.get_predictor().predict(image_data)
     probabilities = graph.get_predictor().prediction_probabilities(image_data)
-    print(
-        'actual number: 7, prediction:', prediction,
-        'predicted probabilities:', probabilities
-    )
+    print('actual number: 7, prediction:', prediction)
+    print('predicted probabilities:', probabilities)
     assert prediction == 7
     assert probabilities.argmax() == prediction
 

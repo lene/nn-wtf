@@ -25,7 +25,6 @@ class NeuralNetworkGraph:
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_size), name='input')
         self.labels_placeholder = tf.placeholder(tf.int32, shape=(None,), name='labels')
 
-
     def _set_layer_sizes(self, layer_sizes):
         layer_sizes = tuple(filter(None, layer_sizes))
         if layer_sizes[-1] < self.output_size:
@@ -83,6 +82,7 @@ class NeuralNetworkGraph:
         batch_size=1000
     ):
         assert precision is None or 0. < precision < 1.
+        assert data_sets.train.num_examples % batch_size == 0
 
         self.step = 0
         while self.step < max_steps and not self._has_reached_precision(data_sets, precision, batch_size):

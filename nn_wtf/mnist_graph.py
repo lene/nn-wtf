@@ -83,17 +83,11 @@ class MNISTGraph(NeuralNetworkGraph):
             print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
                   (self.num_examples, self.true_count, self.precision))
 
-    def evaluate_new_data_set(self, data_set):
-        self.batch_size = data_set.num_examples
-        self.num_examples = data_set.num_examples
-        self.print_eval(data_set)
-
     def _setup_summaries(self):
         # Build the summary operation based on the TF collection of Summaries.
         self.summary_op = tf.merge_all_summaries()
         # Create a saver for writing training checkpoints.
         self.saver = tf.train.Saver()
-        self.summary_writer = None
 
 
 def ensure_is_dir(train_dir_string):
