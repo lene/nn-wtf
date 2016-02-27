@@ -20,6 +20,7 @@ import os
 
 import numpy
 
+from nn_wtf.data_sets import DataSets
 from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
 from nn_wtf.mnist_graph import IMAGE_SIZE
 
@@ -106,13 +107,6 @@ def extract_labels(filename, one_hot=False):
       return dense_to_one_hot(labels)
     return labels
 
-
-class DataSets:
-
-    def __init__(self, train, validation, test):
-        self.train = train
-        self.validation = validation
-        self.test = test
 
 TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
 TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
