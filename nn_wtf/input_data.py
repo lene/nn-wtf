@@ -110,7 +110,7 @@ def extract_labels(filename, one_hot=False):
 class DataSets:
 
     def __init__(self, train, validation, test):
-        self.train = test
+        self.train = train
         self.validation = validation
         self.test = test
 
