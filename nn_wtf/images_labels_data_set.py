@@ -2,7 +2,7 @@ from nn_wtf.data_set_base import DataSetBase
 
 import numpy
 
-__author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 
 class ImagesLabelsDataSet(DataSetBase):
@@ -33,11 +33,16 @@ def normalize(ndarray):
     :param ndarray:
     :return:
     """
-    ndarray = ndarray.astype(numpy.float32)
-    return numpy.multiply(ndarray, 1.0 / 255.0)
+    assert isinstance(ndarray, numpy.ndarray)
+    assert ndarray.dtype == numpy.uint8
+
+    return numpy.multiply(ndarray.astype(numpy.float32), 1.0/255.0)
 
 
 def invert(ndarray):
+    assert isinstance(ndarray, numpy.ndarray)
+    assert ndarray.dtype == numpy.float32
+
     return numpy.subtract(1.0, ndarray)
 
 

@@ -1,11 +1,11 @@
-from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
+from nn_wtf.images_labels_data_set import ImagesLabelsDataSet, normalize
 from .util import create_minimal_input_placeholder
 
 import numpy
 
 import unittest
 
-__author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 # pylint: disable=missing-docstring
 
 NUM_TRAINING_SAMPLES = 20
@@ -58,6 +58,21 @@ class ImagesLabelsDataSetTest(unittest.TestCase):
         _, _ = data_set.next_batch(batch_size)
         self.assertEqual(1, data_set.epochs_completed)
 
+    def test_normalize_dtype(self):
+        data = create_empty_image_data()
+        normalized = normalize(data)
+        self.assertEqual(normalized.dtype, numpy.float32)
+
+    def test_normalize_range(self):
+        data = create_random_image_data(0, 255)
+        normalized = normalize(data)
+        self.assertLessEqual(normalized.max(), 1.)
+        self.assertGreaterEqual(normalized.min(), 0.)
+
+    def test_normalize_bad_input(self):
+        data = create_random_image_data(0, 255).astype(numpy.float32)
+        with self.assertRaises(AssertionError):
+            normalize(data)
 
 def _create_empty_data_set():
     images = create_empty_image_data()
@@ -66,7 +81,17 @@ def _create_empty_data_set():
 
 
 def create_empty_image_data():
-    buf = [0] * NUM_TRAINING_SAMPLES * IMAGE_WIDTH * IMAGE_HEIGHT
+    return image_data_from_list([0] * NUM_TRAINING_SAMPLES * IMAGE_WIDTH * IMAGE_HEIGHT)
+
+
+def create_random_image_data(min_val, max_val):
+    from random import randrange
+    return image_data_from_list(
+        [randrange(min_val, max_val+1) for _ in range(NUM_TRAINING_SAMPLES * IMAGE_WIDTH * IMAGE_HEIGHT)]
+    )
+
+
+def image_data_from_list(buf):
     data = numpy.fromiter(buf, dtype=numpy.uint8)
     return data.reshape(NUM_TRAINING_SAMPLES, IMAGE_WIDTH, IMAGE_HEIGHT, 1)
 
