@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-__author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 
 def print_tensor(tensor):

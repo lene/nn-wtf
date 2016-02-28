@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from nn_wtf.neural_network_graph import NeuralNetworkGraph
 
-__author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 
 class NeuralNetworkOptimizer:

@@ -5,7 +5,7 @@ import tensorflow as tf
 
 import math
 
-__author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 # todo, obvs :-)
 CHANGE_THIS_LEARNING_RATE = 0.1

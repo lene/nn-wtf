@@ -4,7 +4,7 @@ import tensorflow as tf
 
 import numpy
 
-__author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 MINIMAL_INPUT_SIZE = 2
 MINIMAL_LAYER_GEOMETRY = (2, 2)

@@ -6,7 +6,7 @@ import tensorflow as tf
 
 import unittest
 
-__author__ = 'Lene Preuss <lp@sinnwerkstatt.com>'
+__author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 # pylint: disable=missing-docstring
 
 
