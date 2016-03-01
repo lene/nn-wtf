@@ -33,6 +33,16 @@ def maybe_download(filename, base_url, work_directory):
     return file_path
 
 
+def read_images_from_file(filename, rows, cols, num_images, depth=1):
+    with open(filename, 'rb') as bytestream:
+        return images_from_bytestream(bytestream, rows, cols, num_images, depth)
+
+
+def read_images_from_url(url, rows, cols, num_images, depth=1):
+    with urllib.request.urlopen(url) as bytestream:
+        return images_from_bytestream(bytestream, rows, cols, num_images, depth)
+
+
 def images_from_bytestream(bytestream, rows, cols, num_images, depth=1):
     buf = bytestream.read(rows * cols * depth * num_images)
     data = numpy.frombuffer(buf, dtype=numpy.uint8)
@@ -41,14 +51,14 @@ def images_from_bytestream(bytestream, rows, cols, num_images, depth=1):
 
 def read_one_image_from_file(filename, rows, cols, depth=1):
     with open(filename, 'rb') as bytestream:
-        return read_one_image_from_bytestream(bytestream, rows, cols)
+        return one_image_from_bytestream(bytestream, rows, cols, depth)
 
 
 def read_one_image_from_url(url, rows, cols, depth=1):
     with urllib.request.urlopen(url) as bytestream:
-        return read_one_image_from_bytestream(bytestream, rows, cols)
+        return one_image_from_bytestream(bytestream, rows, cols, depth)
 
 
-def read_one_image_from_bytestream(bytestream, rows, cols, depth=1):
+def one_image_from_bytestream(bytestream, rows, cols, depth=1):
     return images_from_bytestream(bytestream, rows, cols, depth)
 
