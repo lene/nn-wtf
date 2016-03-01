@@ -14,9 +14,8 @@ class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
     IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
     def __init__(
-        self, input_size=None, layer_sizes=(128, 32, None), output_size=None, learning_rate=CHANGE_THIS_LEARNING_RATE,
-        verbose=True,
-        train_dir=DEFAULT_TRAIN_DIR,
+        self, input_size=None, layer_sizes=(128, 32, None), output_size=None,
+        learning_rate=CHANGE_THIS_LEARNING_RATE, verbose=True, train_dir=DEFAULT_TRAIN_DIR
     ):
         """The MNISTGraph constructor takes no positional args, in contrast with NeuralNetworkGraph.
 
@@ -51,11 +50,4 @@ class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
         # Save a checkpoint when done
         self.save(global_step=self.trainer.step)
         self.print_evaluations(data_sets, batch_size)
-
-
-def _get_geometry(hidden1, hidden2, hidden3):
-    hidden_layers = (hidden1, hidden2)
-    if hidden3:
-        hidden_layers += (hidden3,)
-    return hidden_layers
 

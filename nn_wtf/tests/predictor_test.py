@@ -27,6 +27,6 @@ def train_neural_network(train_data):
 
     graph.train(
         data_sets=data_sets, steps_between_checks=50, max_steps=1000, batch_size=train_data.num_examples,
-        precision=0.99
+        precision=0.995
     )
     return graph

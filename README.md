@@ -50,18 +50,18 @@ documentation will be ready by the time this package reaches alpha status.
 If you want to try it on MNIST data, try this sample program:
 
 ```python
-from nn_wtf.input_data import read_data_sets, read_one_image_from_url
+from nn_wtf.mnist_data_sets import MNISTDataSets
 from nn_wtf.mnist_graph import MNISTGraph
 
 import tensorflow as tf
 
-data_sets = read_data_sets('.')
+data_sets = MNISTDataSets('.')
 graph = MNISTGraph(
     learning_rate=0.1, layer_sizes=(64, 64, 16), train_dir='.'
 )
 graph.train(data_sets, max_steps=5000, precision=0.95)
 
-image_data = read_one_image_from_url(
+image_data = MNISTDataSets.read_one_image_from_url(
     'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
 )
 prediction = graph.get_predictor().predict(image_data)

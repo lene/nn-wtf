@@ -17,10 +17,9 @@
 # pylint: disable=missing-docstring
 
 from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
-import nn_wtf.input_data as id
+from nn_wtf.mnist_data_sets import MNISTDataSets
 from nn_wtf.mnist_graph import MNISTGraph
 
-import numpy
 import tensorflow as tf
 
 DEFAULT_OPTIMIZER_PRECISIONS = (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992)
@@ -86,7 +85,7 @@ def run_final_training(
     )
     return graph
 
-DATA_SETS = id.read_data_sets(FLAGS.train_dir)
+DATA_SETS = MNISTDataSets(FLAGS.train_dir)
 
 
 def main(_):
@@ -98,16 +97,16 @@ def main(_):
     else:
         with tf.Graph().as_default():
             graph = run_training()
-            image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
+            image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
             print('actual number: 7, prediction:', graph.get_predictor().predict(image_data))
             print('predicted probabilities:', graph.get_predictor().prediction_probabilities(image_data))
-            image_data = id.read_one_image_from_url(
+            image_data = MNISTDataSets.read_one_image_from_url(
                 'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
             )
             prediction = graph.get_predictor().predict(image_data)
             print('actual number: 7, prediction:', prediction)
             for i in range(10):
-                image_data = id.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
+                image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
                 prediction = graph.get_predictor().predict(image_data)
                 print(i, prediction)
 
@@ -117,7 +116,7 @@ def perform_self_test():
     graph = run_final_training(
         (32, 32, None), DATA_SETS, steps_between_checks=50, learning_rate=0.1, desired_precision=0.8
     )
-    image_data = id.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
+    image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
     prediction = graph.get_predictor().predict(image_data)
     probabilities = graph.get_predictor().prediction_probabilities(image_data)
     print('actual number: 7, prediction:', prediction)
