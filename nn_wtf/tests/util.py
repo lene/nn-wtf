@@ -31,3 +31,9 @@ def train_data_input(value):
     return numpy.fromiter([value, value], numpy.dtype(numpy.float32))
 
 
+def train_data_0_1():
+    return numpy.fromiter([0, 0, 1, 1], numpy.dtype(numpy.float32))
+
+
+def train_data_1_0():
+    return numpy.fromiter([1, 1, 0, 0], numpy.dtype(numpy.float32))

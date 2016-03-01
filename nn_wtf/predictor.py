@@ -19,14 +19,24 @@ class Predictor:
         predictions = self._run_prediction_op(image, self.session)
         return predictions[0][0]
 
+    def predict_multiple(self, images, num):
+        predictions = self._run_multi_prediction_op(images, num, self.session)
+        return predictions[0].tolist()
+
     def prediction_probabilities(self, image):
         predictions = self._run_prediction_op(image, self.session)
         return predictions[1][0]
 
-    def _run_prediction_op(self, image, session):
-        image_data = image.reshape(self.graph.input_size)
+    def _run_prediction_op(self, images, session):
+        image_data = images.reshape(self.graph.input_size)
         feed_dict = {self.graph.input_placeholder: [image_data]}
         best = session.run([self.prediction_op, self.probabilities_op], feed_dict)
+        return best
+
+    def _run_multi_prediction_op(self, images, num_images, session):
+        image_data = images.reshape(self.graph.input_size, num_images)
+        feed_dict = {self.graph.input_placeholder: image_data}
+        best = session.run([self.prediction_op], feed_dict)
         return best
 
     def _setup_prediction(self):

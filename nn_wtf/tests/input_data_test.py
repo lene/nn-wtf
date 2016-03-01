@@ -43,7 +43,7 @@ class InputDataTest(unittest.TestCase):
 
     def test_read_images_from_file_fails_if_file_too_short(self):
         with self.assertRaises(ValueError):
-            data = read_images_from_file(
+            read_images_from_file(
                 get_project_root_folder()+'/nn_wtf/data/7_2.raw',
                 MNISTGraph.IMAGE_SIZE, MNISTGraph.IMAGE_SIZE, 3
             )
@@ -56,7 +56,7 @@ class InputDataTest(unittest.TestCase):
 
     def test_read_images_from_file_using_mnist_data_sets_fails_if_file_too_short(self):
         with self.assertRaises(ValueError):
-            data = MNISTDataSets.read_images_from_file(
+            MNISTDataSets.read_images_from_file(
                 get_project_root_folder()+'/nn_wtf/data/7_2.raw', 3
             )
 
