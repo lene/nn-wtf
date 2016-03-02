@@ -106,7 +106,7 @@ def main(_):
             prediction = graph.get_predictor().predict(image_data)
             print('actual number: 7, prediction:', prediction)
             for i in range(10):
-                image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/'+str(i)+'.raw')
+                image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/handwritten_test_data/'+str(i)+'.raw')
                 prediction = graph.get_predictor().predict(image_data)
                 print(i, prediction)
 
