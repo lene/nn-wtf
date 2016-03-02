@@ -41,7 +41,7 @@ class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
         assert self.summary_writer is not None, 'called train() before setting up summary writer'
         assert self.saver is not None, 'called train() before setting up saver'
 
-        # run write_summary() after every check, use self.batch_size as batch size
+        # run write_summary() after every check
         super().train(
             data_sets, max_steps, precision, steps_between_checks,
             run_as_check=self.write_summary, batch_size=batch_size

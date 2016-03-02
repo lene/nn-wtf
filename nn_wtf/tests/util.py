@@ -22,18 +22,68 @@ def get_project_root_folder():
 
 
 def create_train_data_set():
-    train_data = numpy.fromiter([0, 0, 1, 1], numpy.dtype(numpy.float32)).reshape(2, 2)
-    train_labels = numpy.fromiter([0, 1], numpy.dtype(numpy.int8)).reshape(2)
+    train_data = create_vector([0, 0, 1, 1]).reshape(2, 2)
+    train_labels = create_vector([0, 1], numpy.int8).reshape(2)
     return DataSetBase(train_data, train_labels)
 
 
+def create_vector(values, type=numpy.float32):
+    return numpy.fromiter(values, numpy.dtype(type))
+
+
 def train_data_input(value):
-    return numpy.fromiter([value, value], numpy.dtype(numpy.float32))
+    return create_vector([value, value])
 
 
-def train_data_0_1():
-    return numpy.fromiter([0, 0, 1, 1], numpy.dtype(numpy.float32))
+def allow_fail(max_times_fail=1, silent=True):
+    """Runs a test, if necessary repeatedly, allowing it to fail up to max_times_fail times.
 
+    Usage:
 
-def train_data_1_0():
-    return numpy.fromiter([1, 1, 0, 0], numpy.dtype(numpy.float32))
+    @allow_fail
+    def test: ...
+    # allows the test to be repeated once before considering the test failed
+
+    @allow_fail(max_times_fail=2, silent=False)
+    def test(): ...
+    # allows the test to be repeated twice, printing a message on each failure
+
+    This is useful if a test tests non-deterministic behavior, such as with stochastic
+    algorithms. If the tests fails with probability p < 1, allowing it to fail n times
+    causes the resulting test to fail with probability p^(n+1) < p.
+
+    In particular it was written to test neural networks which are initialized randomly.
+
+    :param max_times_fail: How often a test may fail before considering the test failed.
+    :param silent: If False, prints a message before running the test and on each failure.
+    :return: The decorated test method
+    """
+
+    def allow_fail_decorator(func):
+        """
+        :param func: The test allowed to be run repeatedly if it fails.
+        :return: The decorated test function
+        """
+        def run_test_checked(self):
+            """ Runs the test, repeating it up to max_times_fail times if it fails.
+            :param self: The test suite, presumably an object of type unittest.TestCase
+            """
+            if not silent:
+                print(
+                    '\ntrying {}.{}() max. {} times'.format(
+                        type(self).__name__, func.__name__, max_times_fail + 1
+                    )
+                )
+            for i in range(max_times_fail):
+                try:
+                    func(self)
+                    return
+                except AssertionError:
+                    if not silent:
+                        print('failed {} times'.format(i+1))
+            # run the test unguarded for a last time
+            func(self)
+
+        return run_test_checked
+
+    return allow_fail_decorator

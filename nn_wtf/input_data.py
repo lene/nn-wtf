@@ -24,7 +24,7 @@ import urllib.request
 
 def maybe_download(filename, base_url, work_directory):
     if not os.path.exists(work_directory):
-      os.mkdir(work_directory)
+        os.mkdir(work_directory)
     file_path = os.path.join(work_directory, filename)
     if not os.path.exists(file_path):
         file_path, _ = urllib.request.urlretrieve(base_url + filename, file_path)
