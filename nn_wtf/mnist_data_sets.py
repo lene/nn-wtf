@@ -1,7 +1,8 @@
 from nn_wtf.data_sets import DataSets
 from nn_wtf.images_labels_data_set import ImagesLabelsDataSet
 from nn_wtf.input_data import maybe_download, images_from_bytestream, \
-    read_one_image_from_file, read_one_image_from_url, read_images_from_file, read_images_from_url
+    read_one_image_from_file, read_one_image_from_url, read_images_from_file, read_images_from_url, \
+    read_images_from_files, read_images_from_urls
 
 import numpy
 
@@ -61,6 +62,14 @@ class MNISTDataSets(DataSets):
     @classmethod
     def read_images_from_url(cls, url, num_images):
         return read_images_from_url(url, MNISTGraph.IMAGE_SIZE, MNISTGraph.IMAGE_SIZE, num_images)
+
+    @classmethod
+    def read_images_from_files(cls, *filenames):
+        return read_images_from_files(MNISTGraph.IMAGE_SIZE, MNISTGraph.IMAGE_SIZE, 1, *filenames)
+
+    @classmethod
+    def read_images_from_urls(cls, *filenames):
+        return read_images_from_urls(MNISTGraph.IMAGE_SIZE, MNISTGraph.IMAGE_SIZE, 1, *filenames)
 
     def get_extracted_data(self, file_name, extract_function):
         local_file = maybe_download(file_name, self.SOURCE_URL, self.train_dir)

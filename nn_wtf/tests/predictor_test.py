@@ -4,7 +4,6 @@ from nn_wtf.tests.util import MINIMAL_LAYER_GEOMETRY, create_train_data_set, tra
     create_vector, allow_fail
 
 import unittest
-import numpy
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 # pylint: disable=missing-docstring
@@ -27,14 +26,15 @@ class PredictorTest(unittest.TestCase):
         probabilities_for_1 = graph.get_predictor().prediction_probabilities(train_data_input(1))
         self.assertGreater(probabilities_for_1[1], probabilities_for_1[0])
 
-        predictions = graph.get_predictor().predict_multiple(train_data_0_1(), 2)
-        self.assertEqual([0, 1], predictions)
+        self._check_multiple_values_get_predicted(graph, [0, 1])
+        self._check_multiple_values_get_predicted(graph, [1, 0])
+        self._check_multiple_values_get_predicted(graph, [0, 1, 0])
 
-        predictions = graph.get_predictor().predict_multiple(train_data_1_0(), 2)
-        self.assertEqual([1, 0], predictions)
-
-        predictions = graph.get_predictor().predict_multiple(train_data_0_1_0(), 3)
-        self.assertEqual([0, 1, 0], predictions)
+    def _check_multiple_values_get_predicted(self, graph, train_data):
+        predictions = graph.get_predictor().predict_multiple(
+            generate_train_data(train_data), len(train_data)
+        )
+        self.assertEqual(train_data, predictions)
 
 
 def train_neural_network(train_data):
@@ -49,13 +49,10 @@ def train_neural_network(train_data):
     return graph
 
 
-def train_data_0_1():
-    return create_vector([0, 0, 1, 1])
+def repeat_list_items(data, num_repeats=2):
+    from itertools import repeat
+    return [x for item in data for x in repeat(item, num_repeats)]
 
 
-def train_data_1_0():
-    return create_vector([1, 1, 0, 0])
-
-
-def train_data_0_1_0():
-    return create_vector([0, 0, 1, 1, 0, 0])
+def generate_train_data(values):
+    return create_vector(repeat_list_items(values, 2))
