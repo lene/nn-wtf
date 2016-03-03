@@ -108,7 +108,7 @@ def read_images_from_files(rows, cols, depth, *filenames):
     :return: A numpy.ndarray of shape <num_images, rows, cols, depth>
     """
     _check_describes_image_geometry(rows, cols, depth)
-    return concatenate_images_from_input_function(read_one_image_from_file, rows, cols, depth, filenames)
+    return _concatenate_images_from_input_function(read_one_image_from_file, rows, cols, depth, filenames)
 
 
 def read_images_from_urls(rows, cols, depth, *urls):
@@ -121,7 +121,7 @@ def read_images_from_urls(rows, cols, depth, *urls):
     :return: A numpy.ndarray of shape <num_images, rows, cols, depth>
     """
     _check_describes_image_geometry(rows, cols, depth)
-    return concatenate_images_from_input_function(read_one_image_from_url, rows, cols, depth, urls)
+    return _concatenate_images_from_input_function(read_one_image_from_url, rows, cols, depth, urls)
 
 
 def images_from_bytestream(bytestream, rows, cols, num_images, depth=1):
@@ -153,7 +153,7 @@ def _one_image_from_bytestream(bytestream, rows, cols, depth=1):
     return images_from_bytestream(bytestream, rows, cols, depth)
 
 
-def concatenate_images_from_input_function(input_function, rows, cols, depth, input_resources):
+def _concatenate_images_from_input_function(input_function, rows, cols, depth, input_resources):
     image_data = numpy.concatenate(
         [input_function(input_resource, rows, cols, depth) for input_resource in input_resources]
     )

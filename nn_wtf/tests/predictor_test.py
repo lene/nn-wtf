@@ -1,7 +1,7 @@
 from nn_wtf.data_sets import DataSets
 from nn_wtf.neural_network_graph import NeuralNetworkGraph
-from nn_wtf.tests.util import MINIMAL_LAYER_GEOMETRY, create_train_data_set, train_data_input, \
-    create_vector, allow_fail
+from nn_wtf.tests.util import create_train_data_set, train_data_input, \
+    create_vector, allow_fail, train_neural_network
 
 import unittest
 
@@ -35,19 +35,6 @@ class PredictorTest(unittest.TestCase):
             generate_train_data(train_data), len(train_data)
         )
         self.assertEqual(train_data, predictions)
-
-
-def train_neural_network(train_data):
-    data_sets = DataSets(train_data, train_data, train_data)
-    graph = NeuralNetworkGraph(train_data.input.shape[0], MINIMAL_LAYER_GEOMETRY, len(train_data.labels))
-    graph.init_trainer()
-    graph.set_session()
-
-    graph.train(
-        data_sets=data_sets, steps_between_checks=50, max_steps=1000, batch_size=train_data.num_examples,
-        precision=0.99
-    )
-    return graph
 
 
 def repeat_list_items(data, num_repeats=2):

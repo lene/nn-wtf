@@ -35,10 +35,10 @@ class NeuralNetworkGraph:
         return self.layers[-1]
 
     def init_trainer(
-            self, learning_rate=CHANGE_THIS_LEARNING_RATE, optimizer=tf.train.GradientDescentOptimizer
+            self, learning_rate=CHANGE_THIS_LEARNING_RATE, optimizer=tf.train.GradientDescentOptimizer, **kwargs
     ):
         assert self.trainer is None, 'init_trainer() called repeatedly'
-        self.trainer = Trainer(self, learning_rate=learning_rate, optimizer=optimizer)
+        self.trainer = Trainer(self, learning_rate=learning_rate, optimizer=optimizer, **kwargs)
 
     def set_session(self, session=None):
         assert self.trainer is not None, 'need to set the trainer before setting the session'
@@ -48,10 +48,15 @@ class NeuralNetworkGraph:
 
     def train(
             self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
-            batch_size=1000
+            batch_size=None
     ):
+        if batch_size is None:
+            batch_size = data_sets.train.num_examples
+
         assert self.session is not None, 'called train() before setting up session'
         assert self.trainer is not None, 'called train() before setting up trainer'
+        assert data_sets.train.num_examples % batch_size == 0, \
+            'training set size {} not divisible by batch size {}'.format(data_sets.train.num_examples, batch_size)
 
         self.trainer.train(data_sets, max_steps, precision, steps_between_checks, run_as_check, batch_size)
 

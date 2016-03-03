@@ -1,45 +1,96 @@
 import tensorflow as tf
 
+from nn_wtf.data_sets import DataSets
+
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 
 class Trainer:
 
-    def __init__(self, graph, learning_rate, optimizer=tf.train.GradientDescentOptimizer):
+    """Takes care of training a NeuralNetworkGraph. """
+
+    def __init__(self, graph, learning_rate, optimizer=tf.train.GradientDescentOptimizer, **kwargs):
+        """Instantiate a Trainer.
+
+        :param graph: NeuralNetworkGraph to train.
+        :param learning_rate: The learning rate for the optimizer to use.
+        :param optimizer: See https://www.tensorflow.org/versions/r0.7/api_docs/python/train.html#optimizers
+        :param kwargs: Additional parameters for optimizer instantiation.
+        """
+        assert issubclass(optimizer, tf.train.Optimizer)
         self.graph = graph
         self.learning_rate = learning_rate
-        self.build_train_ops()
+        self.optimizer_class = optimizer
+        self.kwargs = kwargs
+        self._build_train_ops()
         self.step = 0
-
-    def build_train_ops(self):
-
-        assert len(self.graph.layers) > 0, 'build_neural_network() needs to be called first'
-
-        # Add to the Graph the Ops for loss calculation.
-        self.loss_op = self.loss(self.graph.output_layer(), self.graph.labels_placeholder)
-
-        # Add to the Graph the Ops that calculate and apply gradients.
-        self.train_op = self.training(self.loss_op, self.learning_rate)
-
-        # Add the Op to compare the logits to the labels during evaluation.
-        self.eval_correct_op = self.evaluation(self.graph.output_layer(), self.graph.labels_placeholder)
 
     def train(
         self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
-        batch_size=1000
+        batch_size=None
     ):
-        assert precision is None or 0. <= precision < 1., 'precision must be between 0 and 1 if set'
-        assert data_sets.train.num_examples % batch_size == 0, \
-            'training set size {} not divisible by batch size {}'.format(data_sets.train.num_examples, batch_size)
-        assert self.graph.session is not None, 'graph session not initialized'
+        """Run the training on the connected neural network.
+
+        :param data_sets: Training, validation and test data sets.
+        :param max_steps: Maximum number of optimization steps to take.
+        :param precision: Optional precision on predicting the test data to achieve. When this is
+            achieved, training is finished.
+        :param steps_between_checks: How many optimization steps are run inbetween checking if done.
+        :param run_as_check: Optional function that is run before each check for doneness.
+        :param batch_size: How many data sets are fed into the optimizer at once.
+        """
+        if batch_size is None:
+            batch_size = data_sets.train.num_examples
+
+        if steps_between_checks > max_steps:
+            steps_between_checks = max_steps
+
+        self._check_train_parameters_valid(batch_size, data_sets, precision)
 
         while self.step < max_steps and not self._has_reached_precision(data_sets, precision, batch_size):
 
-            feed_dict, loss_value = self.run_training_steps(data_sets, steps_between_checks, batch_size)
+            feed_dict, loss_value = self._run_training_steps(data_sets, steps_between_checks, batch_size)
             self.step += steps_between_checks
 
             if run_as_check is not None:
                 run_as_check(feed_dict, loss_value, self.step)
+
+    def do_eval(self, data_set, batch_size):
+        """Runs one evaluation against the full epoch of data.
+
+        :param data_set: The set of images and labels to evaluate, from
+            input_data.read_data_sets().
+        :param batch_size: number of input data to evaluate concurrently
+        """
+        self.true_count = 0  # Counts the number of correct predictions.
+        steps_per_epoch = data_set.num_examples // batch_size
+        self.num_examples = steps_per_epoch * batch_size
+        for _ in range(steps_per_epoch):
+            feed_dict = self.graph.fill_feed_dict(data_set, batch_size)
+            self.true_count += self.graph.session.run(self.eval_correct_op, feed_dict=feed_dict)
+        self.precision = self.true_count / self.num_examples
+
+    ############################################################################
+
+    def _check_train_parameters_valid(self, batch_size, data_sets, precision):
+        assert isinstance(data_sets, DataSets)
+        assert precision is None or 0. <= precision < 1., 'precision, if set, must be between 0 and 1'
+        assert data_sets.train.num_examples % batch_size == 0, \
+            'training set size {} not divisible by batch size {}'.format(data_sets.train.num_examples, batch_size)
+        assert self.graph.session is not None, 'graph session not initialized'
+
+    def _build_train_ops(self):
+
+        assert len(self.graph.layers) > 0, 'build_neural_network() needs to be called first'
+
+        # Add to the Graph the Ops for loss calculation.
+        self.loss_op = self._loss(self.graph.output_layer(), self.graph.labels_placeholder)
+
+        # Add to the Graph the Ops that calculate and apply gradients.
+        self.train_op = self._training(self.loss_op, self.learning_rate)
+
+        # Add the Op to compare the logits to the labels during evaluation.
+        self.eval_correct_op = self._evaluation(self.graph.output_layer(), self.graph.labels_placeholder)
 
     def _has_reached_precision(self, data_sets, precision, batch_size):
         if precision is not None and self.step > 0:
@@ -48,7 +99,7 @@ class Trainer:
                 return True
         return False
 
-    def loss(self, logits, labels_placeholder):
+    def _loss(self, logits, labels_placeholder):
         """Calculates the loss from the logits and the labels.
 
         Args:
@@ -64,7 +115,7 @@ class Trainer:
         )
         return tf.reduce_mean(cross_entropy, name='cross_entropy_mean')
 
-    def training(self, loss, learning_rate):
+    def _training(self, loss, learning_rate):
         """Sets up the training Ops.
 
         Creates a summarizer to track the loss over time in TensorBoard.
@@ -84,7 +135,7 @@ class Trainer:
         # Add a scalar summary for the snapshot loss.
         tf.scalar_summary(loss.op.name, loss)
         # Create the gradient descent optimizer with the given learning rate.
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+        optimizer = self.optimizer_class(learning_rate, **self.kwargs)
         # Create a variable to track the global step.
         global_step = tf.Variable(0, name='global_step', trainable=False)
         # Use the optimizer to apply the gradients that minimize the loss
@@ -92,7 +143,7 @@ class Trainer:
         train_op = optimizer.minimize(loss, global_step=global_step)
         return train_op
 
-    def evaluation(self, logits, labels):
+    def _evaluation(self, logits, labels):
         """Evaluate the quality of the logits at predicting the label.
 
         Args:
@@ -123,29 +174,13 @@ class Trainer:
         concated = tf.concat(1, [indices, labels])
         return tf.sparse_to_dense(concated, tf.pack([batch_size, self.graph.output_size]), 1.0, 0.0)
 
-    def do_eval(self, data_set, batch_size):
-        """Runs one evaluation against the full epoch of data.
-
-        Args:
-          data_set: The set of images and labels to evaluate, from
-            input_data.read_data_sets().
-          batch_size: number of input data to evaluate concurrently
-        """
-        self.true_count = 0  # Counts the number of correct predictions.
-        steps_per_epoch = data_set.num_examples // batch_size
-        self.num_examples = steps_per_epoch * batch_size
-        for _ in range(steps_per_epoch):
-            feed_dict = self.graph.fill_feed_dict(data_set, batch_size)
-            self.true_count += self.graph.session.run(self.eval_correct_op, feed_dict=feed_dict)
-        self.precision = self.true_count / self.num_examples
-
-    def run_training_steps(self, data_sets, num_steps, batch_size):
+    def _run_training_steps(self, data_sets, num_steps, batch_size):
         feed_dict, loss_value = None, None
         for step in range(num_steps):
-            feed_dict, loss_value = self.run_training_step(data_sets, batch_size)
+            feed_dict, loss_value = self._run_training_step(data_sets, batch_size)
         return feed_dict, loss_value
 
-    def run_training_step(self, data_sets, batch_size):
+    def _run_training_step(self, data_sets, batch_size):
         # Fill a feed dictionary with the actual set of images and labels for this particular
         # training step.
         feed_dict = self.graph.fill_feed_dict(data_sets.train, batch_size)
