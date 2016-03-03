@@ -58,7 +58,7 @@ def run_training():
 def get_network_geometry(data_sets):
     if FLAGS.training_precision:
         optimizer = NeuralNetworkOptimizer(
-            MNISTGraph, FLAGS.training_precision, learning_rate=FLAGS.learning_rate, verbose=True
+            MNISTGraph, None, FLAGS.training_precision, None, learning_rate=FLAGS.learning_rate, verbose=True
         )
         geometry = optimizer.brute_force_optimal_network_geometry(data_sets, FLAGS.max_steps)
         print('Best geometry found:', geometry)
@@ -74,11 +74,9 @@ def run_final_training(
     desired_precision=FLAGS.desired_precision
 
 ):
-    graph = MNISTGraph(
-            learning_rate=learning_rate,
-            layer_sizes=geometry,
-            train_dir=FLAGS.train_dir
-        )
+    graph = MNISTGraph(layer_sizes=geometry)
+    graph.init_trainer(learning_rate=learning_rate)
+    graph.set_session(None, train_dir=FLAGS.train_dir)
     graph.train(
         data_sets, max_steps,
         precision=desired_precision, steps_between_checks=steps_between_checks, batch_size=FLAGS.batch_size

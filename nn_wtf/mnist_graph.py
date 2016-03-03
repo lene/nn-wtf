@@ -5,6 +5,10 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 
 class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
+    """A NeuralNetworkGraph configured with the MNIST data geometry which also
+    periodically writes a report during the training process and saves the
+    trained graph.
+    """
 
     # The MNIST dataset has 10 classes, representing the digits 0 through 9.
     NUM_CLASSES = 10
@@ -14,10 +18,9 @@ class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
     IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
     def __init__(
-        self, input_size=None, layer_sizes=(128, 32, None), output_size=None,
-        learning_rate=CHANGE_THIS_LEARNING_RATE, verbose=True, train_dir=DEFAULT_TRAIN_DIR
-    ):
+        self, input_size=None, layer_sizes=(128, 32, None), output_size=None):
         """The MNISTGraph constructor takes no positional args, in contrast with NeuralNetworkGraph.
+        input_size and output_size are present for compatibility, but ignored.
 
         :param input_size: ignored, present for client compatibility
         :param layer_sizes: tuple of sizes of the neural network hidden layers
@@ -27,9 +30,11 @@ class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
         :param train_dir: where to write savepoints and summaries
         """
         NeuralNetworkGraph.__init__(
-            self, self.IMAGE_PIXELS, layer_sizes, self.NUM_CLASSES, learning_rate
+            self, self.IMAGE_PIXELS, layer_sizes, self.NUM_CLASSES
         )
-        self.set_session()
+
+    def set_session(self, session=None, verbose=True, train_dir=DEFAULT_TRAIN_DIR):
+        super().set_session()
         SaverMixin.__init__(self, self.session, train_dir)
         SummaryWriterMixin.__init__(self, self.session, verbose, train_dir)
 

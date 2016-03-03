@@ -88,9 +88,9 @@ class NeuralNetworkOptimizer:
             graph = self.tested_network(
                 input_size=self.input_size,
                 layer_sizes=geometry,
-                output_size=self.output_size,
-                learning_rate=self.learning_rate
+                output_size=self.output_size
             )
+            graph.init_trainer(learning_rate=self.learning_rate)
             graph.set_session()
             graph.train(
                 data_sets, max_steps,

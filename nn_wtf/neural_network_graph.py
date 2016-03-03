@@ -13,7 +13,7 @@ CHANGE_THIS_LEARNING_RATE = 0.1
 
 class NeuralNetworkGraph:
 
-    def __init__(self, input_size, layer_sizes, output_size, learning_rate=CHANGE_THIS_LEARNING_RATE):
+    def __init__(self, input_size, layer_sizes, output_size):
         """Initialize a neural network given its geometry.
 
         :param input_size: number of input channels
@@ -22,24 +22,28 @@ class NeuralNetworkGraph:
         :param learning_rate: learning rate for gradient descent optimizer
         """
         self._setup_geometry(input_size, layer_sizes, output_size)
-        self.learning_rate = learning_rate
         self.predictor = None
         self.trainer = None
+        self.session = None
         self.layers = []
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_size), name='input')
         self.labels_placeholder = tf.placeholder(tf.int32, shape=(None,), name='labels')
         self._build_neural_network()
 
     def output_layer(self):
+        assert self.layers, 'called output_layer() before setting up the neural network'
         return self.layers[-1]
 
-    def set_session(self, session=None):
-        if self.trainer is None:
-            self.trainer = Trainer(self, learning_rate=self.learning_rate)
+    def init_trainer(
+            self, learning_rate=CHANGE_THIS_LEARNING_RATE, optimizer=tf.train.GradientDescentOptimizer
+    ):
+        assert self.trainer is None, 'init_trainer() called repeatedly'
+        self.trainer = Trainer(self, learning_rate=learning_rate, optimizer=optimizer)
 
+    def set_session(self, session=None):
+        assert self.trainer is not None, 'need to set the trainer before setting the session'
         if session is None:
             session = _initialize_session()
-
         self.session = session
 
     def train(
@@ -60,7 +64,7 @@ class NeuralNetworkGraph:
               ....
         }
 
-        :param data_set: The set of images and labels, from input_data.read_data_sets()
+        :param data_set: The set of images and labels
         :return The feed dictionary mapping from placeholders to values.
         """
         # Create the feed_dict for the placeholders filled with the next `batch size ` examples.
@@ -76,6 +80,8 @@ class NeuralNetworkGraph:
         if self.predictor is None:
             self.predictor = Predictor(self, self.session)
         return self.predictor
+
+    ############################################################################
 
     def _setup_geometry(self, input_size, layer_sizes, output_size):
         self.input_size = int(input_size)

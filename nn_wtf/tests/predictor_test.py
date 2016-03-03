@@ -40,6 +40,7 @@ class PredictorTest(unittest.TestCase):
 def train_neural_network(train_data):
     data_sets = DataSets(train_data, train_data, train_data)
     graph = NeuralNetworkGraph(train_data.input.shape[0], MINIMAL_LAYER_GEOMETRY, len(train_data.labels))
+    graph.init_trainer()
     graph.set_session()
 
     graph.train(

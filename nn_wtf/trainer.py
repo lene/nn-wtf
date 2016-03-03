@@ -5,7 +5,7 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 class Trainer:
 
-    def __init__(self, graph, learning_rate):
+    def __init__(self, graph, learning_rate, optimizer=tf.train.GradientDescentOptimizer):
         self.graph = graph
         self.learning_rate = learning_rate
         self.build_train_ops()
