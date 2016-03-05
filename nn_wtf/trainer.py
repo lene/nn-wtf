@@ -47,13 +47,19 @@ class Trainer:
 
         self._check_train_parameters_valid(batch_size, data_sets, precision)
 
-        while self.step < max_steps and not self._has_reached_precision(data_sets, precision, batch_size):
+        while self.num_steps() < max_steps and not self._has_reached_precision(data_sets, precision, batch_size):
 
             feed_dict, loss_value = self._run_training_steps(data_sets, steps_between_checks, batch_size)
             self.step += steps_between_checks
 
             if run_as_check is not None:
-                run_as_check(feed_dict, loss_value, self.step)
+                run_as_check(feed_dict, loss_value, self.num_steps())
+
+    def num_steps(self):
+        """
+        :return: Number of steps taken by the optimizer
+        """
+        return self.step
 
     def do_eval(self, data_set, batch_size):
         """Runs one evaluation against the full epoch of data.
@@ -93,7 +99,7 @@ class Trainer:
         self.eval_correct_op = self._evaluation(self.graph.output_layer(), self.graph.labels_placeholder)
 
     def _has_reached_precision(self, data_sets, precision, batch_size):
-        if precision is not None and self.step > 0:
+        if precision is not None and self.num_steps() > 0:
             self.do_eval(data_sets.test, batch_size)
             if self.precision > precision:
                 return True
@@ -137,10 +143,10 @@ class Trainer:
         # Create the gradient descent optimizer with the given learning rate.
         optimizer = self.optimizer_class(learning_rate, **self.kwargs)
         # Create a variable to track the global step.
-        global_step = tf.Variable(0, name='global_step', trainable=False)
+        self.global_step = tf.Variable(0, name='global_step', trainable=False)
         # Use the optimizer to apply the gradients that minimize the loss
         # (and also increment the global step counter) as a single training step.
-        train_op = optimizer.minimize(loss, global_step=global_step)
+        train_op = optimizer.minimize(loss, global_step=self.global_step)
         return train_op
 
     def _evaluation(self, logits, labels):

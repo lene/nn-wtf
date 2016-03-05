@@ -25,19 +25,31 @@ class NeuralNetworkOptimizer:
             self.cpu_time = cpu_time
             self.wall_time = wall_time
             self.precision = precision
-            self.step = step
+            self.num_steps = step
             self.layers = layers
 
         def __str__(self):
             return 'CPU: {:7.2f}s Wall: {:7.2f}s Precision: {:5.2f}% Iterations: {:4d} Geometry: {}'.format(
-                self.cpu_time, self.wall_time, 100.*self.precision, self.step, str(self.layers)
+                self.cpu_time, self.wall_time, 100.*self.precision, self.num_steps, str(self.layers)
             )
 
         def __repr__(self):
             return str(self.__dict__())
 
         def __dict__(self):
-            return {'cpu_time': self.cpu_time, 'step': self.step, 'layers': self.layers}
+            return {'cpu_time': self.cpu_time, 'step': self.num_steps, 'layers': self.layers}
+
+    class OptimizationParameters:
+
+        def __init__(self):
+            self.num_layers = None
+            self.layer_sizes = None
+            self.learning_rate = None
+            self.optimizer = None
+
+        @classmethod
+        def next_parameters(cls, current_parameter):
+            pass
 
     def __init__(
             self, tested_network, input_size, output_size, training_precision,
@@ -80,7 +92,7 @@ class NeuralNetworkOptimizer:
 
     def timed_run_training(self, data_sets, geometry, max_steps=10000):
         graph, cpu, wall = timed_run(self.run_training_once, data_sets, geometry, max_steps)
-        return self.TimingInfo(cpu, wall, graph.trainer.precision, graph.trainer.step, geometry)
+        return self.TimingInfo(cpu, wall, graph.trainer.precision, graph.trainer.num_steps(), geometry)
 
     def run_training_once(self, data_sets, geometry, max_steps):
         # Tell TensorFlow that the model will be built into the default Graph.

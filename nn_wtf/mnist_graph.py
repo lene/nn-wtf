@@ -53,6 +53,6 @@ class MNISTGraph(NeuralNetworkGraph, SaverMixin, SummaryWriterMixin):
         )
 
         # Save a checkpoint when done
-        self.save(global_step=self.trainer.step)
+        self.save(global_step=self.trainer.num_steps())
         self.print_evaluations(data_sets, batch_size)
 

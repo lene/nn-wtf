@@ -61,4 +61,8 @@ class TrainerTest(unittest.TestCase):
         self.graph.set_session()
         self.graph.train(create_train_data_sets(), STEPS_TO_RUN_TRAINER)
 
-
+    def test_num_steps(self):
+        self.test_train_runs()
+        self.assertIsInstance(self.graph.trainer.num_steps(), int)
+        self.assertLessEqual(STEPS_TO_RUN_TRAINER, self.graph.trainer.num_steps())
+        self.assertGreater(self.graph.trainer.num_steps(), 0)
