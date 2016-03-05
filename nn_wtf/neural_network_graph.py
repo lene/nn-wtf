@@ -15,9 +15,7 @@ class NeuralNetworkGraph(NeuralNetworkGraphBase):
         assert self.layers, 'called output_layer() before setting up the neural network'
         return self.layers[-1]
 
-    def init_trainer(
-            self, learning_rate=None, optimizer=None, **kwargs
-    ):
+    def init_trainer(self, learning_rate=None, optimizer=None, **kwargs):
         assert self.trainer is None, 'init_trainer() called repeatedly'
         self.trainer = Trainer(self, learning_rate=learning_rate, optimizer=optimizer, **kwargs)
 
@@ -40,26 +38,6 @@ class NeuralNetworkGraph(NeuralNetworkGraphBase):
             'training set size {} not divisible by batch size {}'.format(data_sets.train.num_examples, batch_size)
 
         self.trainer.train(data_sets, max_steps, precision, steps_between_checks, run_as_check, batch_size)
-
-    def fill_feed_dict(self, data_set, batch_size):
-        """Fills the feed_dict for training the given step.
-
-        A feed_dict takes the form of:
-        feed_dict = {
-            <placeholder>: <tensor of values to be passed for placeholder>,
-              ....
-        }
-
-        :param data_set: The set of images and labels
-        :return The feed dictionary mapping from placeholders to values.
-        """
-        # Create the feed_dict for the placeholders filled with the next `batch size ` examples.
-        input_feed, labels_feed = data_set.next_batch(batch_size)
-        feed_dict = {
-            self.input_placeholder: input_feed,
-            self.labels_placeholder: labels_feed,
-        }
-        return feed_dict
 
     def get_predictor(self):
         assert self.session is not None, 'called predictor before setting up a session'

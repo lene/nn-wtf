@@ -50,7 +50,11 @@ def run_training():
 
     graph, cpu, wall = timed_run(run_final_training, geometry, data_sets)
 
-    print(NeuralNetworkOptimizer.TimingInfo(cpu, wall, graph.trainer.precision, graph.trainer.num_steps(), geometry))
+    print(
+        NeuralNetworkOptimizer.TimingInfo(
+            cpu, wall, graph.trainer.precision(), graph.trainer.num_steps(), geometry
+        )
+    )
 
     return graph
 

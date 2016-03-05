@@ -53,9 +53,10 @@ class SummaryWriterMixin(NeuralNetworkGraphMixin):
     def _print_eval(self, data_set, batch_size, message):
         if self.verbose:
             print(message)
-            self.trainer.do_eval(data_set, batch_size)
-            print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
-                  (self.trainer.num_examples, self.trainer.true_count, self.trainer.precision))
+            evaluation = self.trainer.do_eval(data_set, batch_size)
+            print('  Num examples: {}  Num correct: {}  Precision @ 1: {:5.2f}'.format(
+                evaluation.num_examples, evaluation.true_count, evaluation.precision)
+            )
 
     def _setup_summaries(self):
         # Build the summary operation based on the TF collection of Summaries.

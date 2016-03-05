@@ -8,6 +8,12 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 class Trainer:
 
+    class Evaluation:
+        def __init__(self, num_examples, true_count):
+            self.num_examples = num_examples
+            self.true_count = true_count
+            self.precision = true_count/num_examples
+
     """Takes care of training a NeuralNetworkGraph. """
 
     DEFAULT_LEARNING_RATE = 0.1
@@ -23,12 +29,14 @@ class Trainer:
         """
         assert isinstance(graph, NeuralNetworkGraphBase)
         assert optimizer is None or issubclass(optimizer, tf.train.Optimizer)
+
         self.graph = graph
         self.learning_rate = learning_rate if learning_rate is not None else Trainer.DEFAULT_LEARNING_RATE
         self.optimizer_class = optimizer if optimizer is not None else Trainer.DEFAULT_OPTIMIZER
         self.kwargs = kwargs
         self._build_train_ops()
         self.step = 0
+        self.evaluation = None
 
     def train(
         self, data_sets, max_steps, precision=None, steps_between_checks=100, run_as_check=None,
@@ -66,6 +74,12 @@ class Trainer:
         """
         return self.step
 
+    def precision(self):
+        """
+        :return: precision achieved on the test data set
+        """
+        return self.evaluation.precision
+
     def do_eval(self, data_set, batch_size):
         """Runs one evaluation against the full epoch of data.
 
@@ -73,13 +87,11 @@ class Trainer:
             input_data.read_data_sets().
         :param batch_size: number of input data to evaluate concurrently
         """
-        self.true_count = 0  # Counts the number of correct predictions.
-        steps_per_epoch = data_set.num_examples // batch_size
-        self.num_examples = steps_per_epoch * batch_size
-        for _ in range(steps_per_epoch):
-            feed_dict = self.graph.fill_feed_dict(data_set, batch_size)
-            self.true_count += self.graph.session.run(self.eval_correct_op, feed_dict=feed_dict)
-        self.precision = self.true_count / self.num_examples
+        self.evaluation = Trainer.Evaluation(
+            data_set.num_examples,
+            self._get_num_correctly_predicted(batch_size, data_set)
+        )
+        return self.evaluation
 
     ############################################################################
 
@@ -92,7 +104,7 @@ class Trainer:
 
     def _build_train_ops(self):
 
-        assert len(self.graph.layers) > 0, 'build_neural_network() needs to be called first'
+        assert len(self.graph.layers) > 0, '_build_neural_network() needs to be called first'
 
         # Add to the Graph the Ops for loss calculation.
         self.loss_op = self._loss(self.graph.output_layer(), self.graph.labels_placeholder)
@@ -105,10 +117,18 @@ class Trainer:
 
     def _has_reached_precision(self, data_sets, precision, batch_size):
         if precision is not None and self.num_steps() > 0:
-            self.do_eval(data_sets.test, batch_size)
-            if self.precision > precision:
+            evaluation = self.do_eval(data_sets.test, batch_size)
+            if evaluation.precision > precision:
                 return True
         return False
+
+    def _get_num_correctly_predicted(self, batch_size, data_set):
+        """ Counts the number of correct predictions. """
+        return sum(
+            self.graph.session.run(
+                self.eval_correct_op, feed_dict=self.graph.fill_feed_dict(data_set, batch_size)
+            ) for _ in range(data_set.num_examples // batch_size)
+        )
 
     def _loss(self, logits, labels_placeholder):
         """Calculates the loss from the logits and the labels.

@@ -1,3 +1,5 @@
+from nn_wtf.data_set_base import DataSetBase
+
 import tensorflow as tf
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
@@ -24,8 +26,27 @@ class NeuralNetworkGraphBase:
     def output_layer(self):
         raise NotImplementedError
 
-    def _build_neural_network(self):
-        raise NotImplementedError
+    def fill_feed_dict(self, data_set, batch_size):
+        """Fills the feed_dict for training the given step.
+
+        A feed_dict takes the form of:
+        feed_dict = {
+            <placeholder>: <tensor of values to be passed for placeholder>,
+              ....
+        }
+
+        :param data_set: The set of images and labels
+        :param batch_size: Number of data sets to work on as one batch
+        :return The feed dictionary mapping from placeholders to values.
+        """
+        # Create the feed_dict for the placeholders filled with the next `batch size ` examples.
+        assert isinstance(data_set, DataSetBase)
+        input_feed, labels_feed = data_set.next_batch(batch_size)
+        feed_dict = {
+            self.input_placeholder: input_feed,
+            self.labels_placeholder: labels_feed,
+        }
+        return feed_dict
 
     ############################################################################
 
