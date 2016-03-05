@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from nn_wtf.data_sets import DataSets
+from nn_wtf.neural_network_graph_base import NeuralNetworkGraphBase
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
@@ -20,6 +21,7 @@ class Trainer:
         :param optimizer: See https://www.tensorflow.org/versions/r0.7/api_docs/python/train.html#optimizers
         :param kwargs: Additional parameters for optimizer instantiation.
         """
+        assert isinstance(graph, NeuralNetworkGraphBase)
         assert optimizer is None or issubclass(optimizer, tf.train.Optimizer)
         self.graph = graph
         self.learning_rate = learning_rate if learning_rate is not None else Trainer.DEFAULT_LEARNING_RATE

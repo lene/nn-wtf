@@ -12,6 +12,7 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 STEPS_TO_RUN_TRAINER = 2
 DEFAULT_LEARNING_RATE = 0.1
 
+
 class TrainerTest(unittest.TestCase):
 
     def setUp(self):
@@ -19,6 +20,10 @@ class TrainerTest(unittest.TestCase):
 
     def test_create_trainer(self):
         trainer = Trainer(self.graph, DEFAULT_LEARNING_RATE)
+
+    def test_create_trainer_with_invalid_graph(self):
+        with self.assertRaises(AssertionError):
+            Trainer(1)
 
     def test_train_runs(self):
         self.graph.init_trainer(DEFAULT_LEARNING_RATE)
