@@ -156,12 +156,10 @@ class Trainer:
         The Op returned by this function is what must be passed to the
         `sess.run()` call to cause the model to train.
 
-        Args:
-          loss: Loss tensor, from loss().
-          learning_rate: The learning rate to use for gradient descent.
+        :param loss: Loss tensor, from loss().
+        :param learning_rate: The learning rate to use for gradient descent.
 
-        Returns:
-          train_op: The Op for training.
+        :return train_op: The Op for training.
       """
         # Add a scalar summary for the snapshot loss.
         tf.scalar_summary(loss.op.name, loss)
@@ -177,13 +175,11 @@ class Trainer:
     def _evaluation(self, logits, labels):
         """Evaluate the quality of the logits at predicting the label.
 
-        Args:
-          logits: Logits tensor, float - [batch_size, NUM_CLASSES].
-          labels: Labels tensor, int32 - [batch_size], with values in the
+        :param logits: Logits tensor, float - [batch_size, NUM_CLASSES].
+        :param labels: Labels tensor, int32 - [batch_size], with values in the
             range [0, NUM_CLASSES).
 
-        Returns:
-          A scalar int32 tensor with the number of examples (out of batch_size)
+        :return A scalar int32 tensor with the number of examples (out of batch_size)
           that were predicted correctly.
         """
         # For a classifier model, we can use the in_top_k Op. It returns a bool

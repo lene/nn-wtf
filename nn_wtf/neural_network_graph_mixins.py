@@ -28,7 +28,7 @@ class SaverMixin(NeuralNetworkGraphMixin):
         self.saver = tf.train.Saver()
 
     def save(self, **kwargs):
-        self.saver.save(self.session, save_path=self.train_dir, **kwargs)
+        return self.saver.save(self.session, save_path=self.train_dir, **kwargs)
 
 
 class SummaryWriterMixin(NeuralNetworkGraphMixin):
