@@ -1,4 +1,4 @@
-from nn_wtf.neural_network_graph import NeuralNetworkGraph, CHANGE_THIS_LEARNING_RATE
+from nn_wtf.neural_network_graph import NeuralNetworkGraph
 from nn_wtf.neural_network_graph_mixins import SaverMixin, DEFAULT_TRAIN_DIR, SummaryWriterMixin
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'

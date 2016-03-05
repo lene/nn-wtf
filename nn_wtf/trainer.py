@@ -9,7 +9,10 @@ class Trainer:
 
     """Takes care of training a NeuralNetworkGraph. """
 
-    def __init__(self, graph, learning_rate, optimizer=tf.train.GradientDescentOptimizer, **kwargs):
+    DEFAULT_LEARNING_RATE = 0.1
+    DEFAULT_OPTIMIZER = tf.train.GradientDescentOptimizer
+
+    def __init__(self, graph, learning_rate=None, optimizer=None, **kwargs):
         """Instantiate a Trainer.
 
         :param graph: NeuralNetworkGraph to train.
@@ -17,10 +20,10 @@ class Trainer:
         :param optimizer: See https://www.tensorflow.org/versions/r0.7/api_docs/python/train.html#optimizers
         :param kwargs: Additional parameters for optimizer instantiation.
         """
-        assert issubclass(optimizer, tf.train.Optimizer)
+        assert optimizer is None or issubclass(optimizer, tf.train.Optimizer)
         self.graph = graph
-        self.learning_rate = learning_rate
-        self.optimizer_class = optimizer
+        self.learning_rate = learning_rate if learning_rate is not None else Trainer.DEFAULT_LEARNING_RATE
+        self.optimizer_class = optimizer if optimizer is not None else Trainer.DEFAULT_OPTIMIZER
         self.kwargs = kwargs
         self._build_train_ops()
         self.step = 0

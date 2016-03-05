@@ -7,9 +7,6 @@ import math
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
-# todo, obvs :-)
-CHANGE_THIS_LEARNING_RATE = 0.1
-
 
 class NeuralNetworkGraph:
 
@@ -35,7 +32,7 @@ class NeuralNetworkGraph:
         return self.layers[-1]
 
     def init_trainer(
-            self, learning_rate=CHANGE_THIS_LEARNING_RATE, optimizer=tf.train.GradientDescentOptimizer, **kwargs
+            self, learning_rate=None, optimizer=None, **kwargs
     ):
         assert self.trainer is None, 'init_trainer() called repeatedly'
         self.trainer = Trainer(self, learning_rate=learning_rate, optimizer=optimizer, **kwargs)
