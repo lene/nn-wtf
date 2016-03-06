@@ -17,3 +17,10 @@ events.out.*
 
 # automatically downloaded data
 t*-*s-idx?-ubyte.gz
+
+# other downloaded data
+*.pdf
+*.gz
+*.bz2
+*.xz
+*.7z
