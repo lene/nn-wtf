@@ -11,6 +11,12 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 class NeuralNetworkGraph(NeuralNetworkGraphBase):
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        tf.reset_default_graph()
+
     def output_layer(self):
         assert self.layers, 'called output_layer() before setting up the neural network'
         return self.layers[-1]
@@ -73,6 +79,7 @@ def _add_layer(layer_name, in_units_size, out_units_size, input_layer, function=
         weights = _initialize_weights(in_units_size, out_units_size)
         biases = _initialize_biases(out_units_size)
         new_layer = function(tf.matmul(input_layer, weights) + biases)
+
     return new_layer
 
 
@@ -82,7 +89,6 @@ def _initialize_weights(in_units_size, out_units_size):
         tf.truncated_normal([in_units_size, out_units_size], stddev=1.0 / math.sqrt(float(in_units_size))),
         name='weights'
     )
-
 
 def _initialize_biases(out_units_size):
     return tf.Variable(tf.ones([out_units_size]), name='biases')

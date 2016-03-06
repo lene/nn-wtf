@@ -72,7 +72,7 @@ class Trainer:
         """
         :return: Number of steps taken by the optimizer
         """
-        return self.step
+        return int(self.global_step.eval(self.graph.session))
 
     def precision(self):
         """

@@ -55,9 +55,9 @@ def train_neural_network(train_data, graph=None):
     return graph
 
 
-def init_graph(graph):
+def init_graph(graph, session=None):
     graph.init_trainer()
-    graph.set_session()
+    graph.set_session(session)
     return graph
 
 
