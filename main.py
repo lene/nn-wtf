@@ -16,7 +16,7 @@
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
 
-from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
+from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, BruteForceOptimizer, timed_run
 from nn_wtf.mnist_data_sets import MNISTDataSets
 from nn_wtf.mnist_graph import MNISTGraph
 
@@ -52,7 +52,8 @@ def run_training():
 
     print(
         NeuralNetworkOptimizer.TimingInfo(
-            cpu, wall, graph.trainer.precision(), graph.trainer.num_steps(), geometry
+            cpu, wall, graph.trainer.precision(), graph.trainer.num_steps(),
+            NeuralNetworkOptimizer.OptimizationParameters(geometry, FLAGS.learning_rate)
         )
     )
 
@@ -61,8 +62,8 @@ def run_training():
 
 def get_network_geometry(data_sets):
     if FLAGS.training_precision:
-        optimizer = NeuralNetworkOptimizer(
-            MNISTGraph, None, FLAGS.training_precision, None, learning_rate=FLAGS.learning_rate, verbose=True
+        optimizer = BruteForceOptimizer(
+            MNISTGraph, None, None, FLAGS.training_precision, learning_rate=FLAGS.learning_rate, verbose=True
         )
         geometry = optimizer.brute_force_optimal_network_geometry(data_sets, FLAGS.max_steps)
         print('Best geometry found:', geometry)
@@ -133,7 +134,7 @@ def iterate_over_precisions(filename=None, self_test=False):
     final_results = {}
     for precision in precisions:
         with tf.Graph().as_default():
-            optimizer = NeuralNetworkOptimizer(
+            optimizer = BruteForceOptimizer(
                 MNISTGraph, MNISTGraph.IMAGE_PIXELS, MNISTGraph.NUM_CLASSES, precision,
                 layer_sizes=layer_sizes, learning_rate=0.1, verbose=True
             )

@@ -2,7 +2,7 @@ import time
 import pprint
 import tensorflow as tf
 
-from nn_wtf.neural_network_graph import NeuralNetworkGraph
+from nn_wtf.neural_network_graph_base import NeuralNetworkGraphBase
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
@@ -10,70 +10,113 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 class NeuralNetworkOptimizer:
     """Attempts to find the best parameters to a neural network to be trained in the fastest way."""
 
-    DEFAULT_LEARNING_RATE = 0.1
-    DEFAULT_LAYER_SIZES = (
-        (32, 48, 64, 80),
-        (32, 48, 64, 80),
-        # (32, 48, 64, 80, 96, 128),
-        # (32, 48, 64, 80, 96, 128),
-        (None, 16, 32, 48)
-    )
-
     class TimingInfo:
 
-        def __init__(self, cpu_time, wall_time, precision, step, layers):
+        def __init__(self, cpu_time, wall_time, precision, step, optimization_parameters):
+            assert isinstance(optimization_parameters, NeuralNetworkOptimizer.OptimizationParameters)
             self.cpu_time = cpu_time
             self.wall_time = wall_time
             self.precision = precision
             self.num_steps = step
-            self.layers = layers
+            self.optimization_parameters = optimization_parameters
 
         def __str__(self):
             return 'CPU: {:7.2f}s Wall: {:7.2f}s Precision: {:5.2f}% Iterations: {:4d} Geometry: {}'.format(
-                self.cpu_time, self.wall_time, 100.*self.precision, self.num_steps, str(self.layers)
+                self.cpu_time, self.wall_time, 100.*self.precision, self.num_steps, str(self.optimization_parameters.geometry)
             )
 
         def __repr__(self):
             return str(self.__dict__())
 
         def __dict__(self):
-            return {'cpu_time': self.cpu_time, 'step': self.num_steps, 'layers': self.layers}
+            return {'cpu_time': self.cpu_time, 'step': self.num_steps, 'layers': self.optimization_parameters.geometry}
 
     class OptimizationParameters:
 
-        def __init__(self):
-            self.num_layers = None
-            self.layer_sizes = None
-            self.learning_rate = None
-            self.optimizer = None
+        def __init__(self, geometry, learning_rate, optimizer=tf.train.GradientDescentOptimizer):
+            assert isinstance(geometry, tuple)
+            assert learning_rate > 0.
+            assert issubclass(optimizer, tf.train.Optimizer)
+            self.geometry = geometry
+            self.learning_rate = learning_rate
+            self.optimizer = optimizer
 
         @classmethod
         def next_parameters(cls, current_parameter):
             pass
 
     def __init__(
-            self, tested_network, input_size, output_size, training_precision,
-            layer_sizes=None, learning_rate=None, verbose=False, batch_size=100
+            self, tested_network, input_size, output_size, desired_training_precision,
+            verbose=False, batch_size=100
     ):
-        assert issubclass(tested_network, NeuralNetworkGraph)
+        assert issubclass(tested_network, NeuralNetworkGraphBase)
+        assert 0. <= desired_training_precision < 1.
         self.tested_network = tested_network
         self.input_size = input_size
         self.output_size = output_size
+        self.desired_training_precision = desired_training_precision
         self.batch_size = batch_size
         self.verbose = verbose
+
+    def best_parameters(self, data_sets, max_steps):
+        raise NotImplementedError
+
+    def timed_run_training(self, data_sets, optimization_parameters, max_steps=10000):
+        assert isinstance(optimization_parameters, NeuralNetworkOptimizer.OptimizationParameters)
+        graph, cpu, wall = timed_run(self.run_training_once, data_sets, optimization_parameters, max_steps)
+        return self.TimingInfo(cpu, wall, graph.trainer.precision(), graph.trainer.num_steps(), optimization_parameters)
+
+    def run_training_once(self, data_sets, optimization_parameters, max_steps):
+        assert isinstance(optimization_parameters, NeuralNetworkOptimizer.OptimizationParameters)
+        # Tell TensorFlow that the model will be built into the default Graph.
+        with tf.Graph().as_default():
+            graph = self.tested_network(
+                input_size=self.input_size,
+                layer_sizes=optimization_parameters.geometry,
+                output_size=self.output_size
+            )
+            graph.init_trainer(learning_rate=optimization_parameters.learning_rate)
+            graph.set_session()
+            graph.train(
+                data_sets, max_steps,
+                precision=self.desired_training_precision, steps_between_checks=50, batch_size=self.batch_size
+            )
+        return graph
+
+
+class BruteForceOptimizer(NeuralNetworkOptimizer):
+
+    DEFAULT_LEARNING_RATE = 0.1
+    DEFAULT_LAYER_SIZES = (
+        (32, 48, 64, ),
+        (32, 48, 64, 80),
+        # (32, 48, 64, 80, 96, 128),
+        # (32, 48, 64, 80, 96, 128),
+        (None, 16, 32, 48)
+    )
+
+    def __init__(
+            self, tested_network, input_size, output_size, desired_training_precision,
+            layer_sizes=None, learning_rate=None, verbose=False, batch_size=100
+    ):
+        super().__init__(tested_network, input_size, output_size, desired_training_precision, verbose, batch_size)
         self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
-        self.training_precision = training_precision
         self.layer_sizes = self.DEFAULT_LAYER_SIZES if layer_sizes is None else layer_sizes
 
-    def brute_force_optimal_network_geometry(self, data_sets, max_steps):
+    def best_parameters(self, data_sets, max_steps):
         results = self.time_all_tested_geometries(data_sets, max_steps)
-        return results[0].layers
+        return results[0].optimization_parameters
+
+    def brute_force_optimal_network_geometry(self, data_sets, max_steps):
+        return self.best_parameters(data_sets, max_steps).geometry
 
     def time_all_tested_geometries(self, data_sets, max_steps):
         results = []
         for geometry in self.get_network_geometries():
             run_info = self.timed_run_training(
-                data_sets, geometry, max_steps=max_steps
+                data_sets,
+                NeuralNetworkOptimizer.OptimizationParameters(geometry, self.learning_rate),
+                max_steps=max_steps
             )
             if self.verbose: print(run_info)
             results.append(run_info)
@@ -90,25 +133,10 @@ class NeuralNetworkOptimizer:
     def brute_force_optimize_learning_rate(self):
         raise NotImplementedError()
 
-    def timed_run_training(self, data_sets, geometry, max_steps=10000):
-        graph, cpu, wall = timed_run(self.run_training_once, data_sets, geometry, max_steps)
-        return self.TimingInfo(cpu, wall, graph.trainer.precision(), graph.trainer.num_steps(), geometry)
 
-    def run_training_once(self, data_sets, geometry, max_steps):
-        # Tell TensorFlow that the model will be built into the default Graph.
-        with tf.Graph().as_default():
-            graph = self.tested_network(
-                input_size=self.input_size,
-                layer_sizes=geometry,
-                output_size=self.output_size
-            )
-            graph.init_trainer(learning_rate=self.learning_rate)
-            graph.set_session()
-            graph.train(
-                data_sets, max_steps,
-                precision=self.training_precision, steps_between_checks=50, batch_size=self.batch_size
-            )
-        return graph
+class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
+
+    pass
 
 
 def timed_run(function, *args, **kwargs):
