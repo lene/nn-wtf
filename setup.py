@@ -30,7 +30,7 @@ setup(
     packages=['nn_wtf'],
     package_data={'nn_wtf': ['data/*.raw']},
     install_requires=[
-        'python>=3.4',
+        # 'python>=3.4',
         'numpy'
     ],
     dependency_links=[
