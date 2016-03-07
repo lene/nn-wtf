@@ -1,42 +1,9 @@
-import tensorflow as tf
-
+from nn_wtf.neural_network_graph_mixin import NeuralNetworkGraphMixin, DEFAULT_TRAIN_DIR
 from nn_wtf.trainer import Trainer
 
+import tensorflow as tf
+
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
-
-DEFAULT_TRAIN_DIR = '.nn_wtf-data'
-
-
-class NeuralNetworkGraphMixin:
-    def __init__(self, session, train_dir=DEFAULT_TRAIN_DIR):
-        assert isinstance(session, tf.Session), 'session must be set when initializing saver'
-        self.session = session
-        self.train_dir = ensure_is_dir(train_dir)
-
-
-def ensure_is_dir(train_dir_string):
-    if not train_dir_string[-1] == '/':
-        train_dir_string += '/'
-    return train_dir_string
-
-
-class SaverMixin(NeuralNetworkGraphMixin):
-
-    def __init__(self, session, train_dir=DEFAULT_TRAIN_DIR):
-        super().__init__(session, train_dir)
-        # Create a saver for writing training checkpoints.
-        self.saver = tf.train.Saver()
-
-    def save(self, **kwargs):
-        return self.saver.save(self.session, save_path=self.train_dir, **kwargs)
-
-    def restore(self, save_path=None):
-        if save_path is None:
-            save_path = self.train_dir
-        checkpoint = tf.train.get_checkpoint_state(save_path)
-        if checkpoint is None:
-            raise ValueError('No checkpoint found in {}'.format(save_path))
-        self.saver.restore(self.session, checkpoint.model_checkpoint_path)
 
 
 class SummaryWriterMixin(NeuralNetworkGraphMixin):

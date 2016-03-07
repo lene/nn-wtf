@@ -1,5 +1,6 @@
 from nn_wtf.neural_network_graph import NeuralNetworkGraph
-from nn_wtf.neural_network_graph_mixins import SaverMixin, DEFAULT_TRAIN_DIR, SummaryWriterMixin
+from nn_wtf.saver_mixin import SaverMixin, DEFAULT_TRAIN_DIR
+from nn_wtf.summary_writer_mixin import SummaryWriterMixin
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 

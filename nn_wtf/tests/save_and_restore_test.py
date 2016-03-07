@@ -1,5 +1,5 @@
 from nn_wtf.neural_network_graph import NeuralNetworkGraph
-from nn_wtf.neural_network_graph_mixins import SaverMixin
+from nn_wtf.saver_mixin import SaverMixin
 from nn_wtf.tests.util import MINIMAL_LAYER_GEOMETRY, init_graph, train_neural_network, create_train_data_set
 
 import unittest
