@@ -25,7 +25,7 @@ class NeuralNetworkGraph(NeuralNetworkGraphBase):
         assert self.trainer is None, 'init_trainer() called repeatedly'
         self.trainer = Trainer(self, learning_rate=learning_rate, optimizer=optimizer, **kwargs)
 
-    def set_session(self, session=None):
+    def set_session(self, session=None, **kwargs):
         assert self.trainer is not None, 'need to set the trainer before setting the session'
         if session is None:
             session = _initialize_session()

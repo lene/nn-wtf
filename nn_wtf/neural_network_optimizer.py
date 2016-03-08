@@ -1,6 +1,8 @@
 import time
-import pprint
+from math import log2
+
 import tensorflow as tf
+from pprint import pprint
 
 from nn_wtf.neural_network_graph_base import NeuralNetworkGraphBase
 
@@ -9,6 +11,8 @@ __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
 class NeuralNetworkOptimizer:
     """Attempts to find the best parameters to a neural network to be trained in the fastest way."""
+
+    DEFAULT_LEARNING_RATE = 0.1
 
     class TimingInfo:
 
@@ -41,13 +45,16 @@ class NeuralNetworkOptimizer:
             self.learning_rate = learning_rate
             self.optimizer = optimizer
 
+        def __str__(self):
+            return '{} {} {}'.format(self.geometry, self.learning_rate, type(self.optimizer).__name__)
+
         @classmethod
         def next_parameters(cls, current_parameter):
             pass
 
     def __init__(
             self, tested_network, input_size, output_size, desired_training_precision,
-            verbose=False, batch_size=100
+            learning_rate=None, verbose=False, batch_size=100
     ):
         assert issubclass(tested_network, NeuralNetworkGraphBase)
         assert 0. <= desired_training_precision < 1.
@@ -55,8 +62,9 @@ class NeuralNetworkOptimizer:
         self.input_size = input_size
         self.output_size = output_size
         self.desired_training_precision = desired_training_precision
-        self.batch_size = batch_size
+        self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
         self.verbose = verbose
+        self.batch_size = batch_size
 
     def best_parameters(self, data_sets, max_steps):
         raise NotImplementedError
@@ -76,43 +84,96 @@ class NeuralNetworkOptimizer:
                 output_size=self.output_size
             )
             graph.init_trainer(learning_rate=optimization_parameters.learning_rate)
-            graph.set_session()
+            graph.set_session(verbose=self.verbose)
             graph.train(
                 data_sets, max_steps,
-                precision=self.desired_training_precision, steps_between_checks=50, batch_size=self.batch_size
+                precision=self.desired_training_precision, steps_between_checks=50,
+                # batch_size=data_sets.train.num_examples
             )
         return graph
 
 
-class BruteForceOptimizer(NeuralNetworkOptimizer):
-
-    DEFAULT_LEARNING_RATE = 0.1
-    DEFAULT_LAYER_SIZES = (
-        (32, 48, 64, ),
-        (32, 48, 64, 80),
-        # (32, 48, 64, 80, 96, 128),
-        # (32, 48, 64, 80, 96, 128),
-        (None, 16, 32, 48)
-    )
+class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
 
     def __init__(
-            self, tested_network, input_size, output_size, desired_training_precision,
-            layer_sizes=None, learning_rate=None, verbose=False, batch_size=100
+            self, tested_network, start_training_precision, desired_training_precision,
+            layer_sizes, start_size_difference, learning_rate=None, verbose=False, batch_size=100
     ):
-        super().__init__(tested_network, input_size, output_size, desired_training_precision, verbose, batch_size)
-        self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
-        self.layer_sizes = self.DEFAULT_LAYER_SIZES if layer_sizes is None else layer_sizes
+        super().__init__(tested_network, None, None, desired_training_precision, learning_rate, verbose, batch_size)
+        self.start_training_precision = start_training_precision
+        self.start_layer_sizes = layer_sizes
+        self.start_size_difference = start_size_difference
+        self.learning_rate = learning_rate
+        self.current_layer_sizes = list(layer_sizes)
 
     def best_parameters(self, data_sets, max_steps):
-        results = self.time_all_tested_geometries(data_sets, max_steps)
-        return results[0].optimization_parameters
+        self.batch_size = data_sets.train.num_examples
+        for iteration_step in range(self.num_iteration_steps()+2):
+            precision = self.precisions()[iteration_step]
+            size_difference = self.start_size_difference//2**iteration_step
+            print('\nprecision:', precision, 'size_difference', size_difference)
+            results = self.time_all_tested_geometries(data_sets, max_steps)
+            print('results:')
+            print(results)
+            results = [results[i] for i in range(max(len(results)//2, 1)-1)]
+            print('after slicing:',results)
+            print('current layer sizes before:', self.current_layer_sizes)
+            for i, geometry in enumerate(self.current_layer_sizes):
+                if not geometry in [result.optimization_parameters.geometry for result in results]:
+                    del self.current_layer_sizes[i]
+            print('current layer sizes after:', self.current_layer_sizes)
+            self.current_layer_sizes = sorted(list(set(
+                [neighbor
+                 for old_layer_size in self.current_layer_sizes
+                 for neighbor in self.tuple_neighbors(old_layer_size, size_difference)]
+            )))
+            print(
+                'new layer sizes:',
+                self.current_layer_sizes
+            )
+        print('starting to prune results...')
+        while len(self.current_layer_sizes) > 1:
+            results = [results[i] for i in range(max(len(results)//2, 1)-1)]
+            for i, geometry in enumerate(self.current_layer_sizes):
+                if not geometry in [result.optimization_parameters.geometry for result in results]:
+                    del self.current_layer_sizes[i]
+            print('current layer sizes:', self.current_layer_sizes)
+            results = self.time_all_tested_geometries(data_sets, max_steps)
+            print('results:')
+            print(results)
+        return results[0]
 
-    def brute_force_optimal_network_geometry(self, data_sets, max_steps):
-        return self.best_parameters(data_sets, max_steps).geometry
+    def tuple_neighbors(self, geometry, difference):
+        neighbors = []
+        for coordinate in (geometry[0]-difference, geometry[0], geometry[0]+difference):
+            if coordinate >= self.output_size and coordinate not in neighbors:
+                neighbors.append((coordinate,)+geometry[1:])
+                if len(geometry) > 1:
+                    neighbors.extend(
+                        [
+                            (coordinate,)+sub_neighbor
+                            for sub_neighbor in self.tuple_neighbors(geometry[1:], difference)
+                        ]
+                    )
+        return neighbors
+
+    def num_iteration_steps(self):
+        return int(log2(self.start_size_difference))
+
+    def precisions(self):
+        difference = self.desired_training_precision-self.start_training_precision
+        precisions = [self.start_training_precision]
+        for i in range(self.num_iteration_steps()):
+            next_precision = self.desired_training_precision-(self.desired_training_precision-precisions[-1])/2.
+            precisions.append(next_precision)
+        precisions.append(self.desired_training_precision)
+        return precisions
 
     def time_all_tested_geometries(self, data_sets, max_steps):
+        self.input_size = data_sets.train.input.shape[0]
+        self.output_size = data_sets.train.labels.shape[0]
         results = []
-        for geometry in self.get_network_geometries():
+        for geometry in self.current_layer_sizes:
             run_info = self.timed_run_training(
                 data_sets,
                 NeuralNetworkOptimizer.OptimizationParameters(geometry, self.learning_rate),
@@ -123,21 +184,6 @@ class BruteForceOptimizer(NeuralNetworkOptimizer):
         results = sorted(results, key=lambda r: r.cpu_time)
         if self.verbose: pprint.pprint(results, width=100)
         return results
-
-    def get_network_geometries(self):
-        return ((l1, l2, l3)
-                for l1 in self.layer_sizes[0]
-                for l2 in self.layer_sizes[1] if l2 <= l1
-                for l3 in self.layer_sizes[2] if l3 is None or l3 <= l2)
-
-    def brute_force_optimize_learning_rate(self):
-        raise NotImplementedError()
-
-
-class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
-
-    pass
-
 
 def timed_run(function, *args, **kwargs):
     start_cpu_time, start_wall_time = time.process_time(), time.time()

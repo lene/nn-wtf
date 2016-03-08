@@ -16,7 +16,8 @@
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
 
-from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, BruteForceOptimizer, timed_run
+from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
+from nn_wtf.brute_force_optimizer import BruteForceOptimizer
 from nn_wtf.mnist_data_sets import MNISTDataSets
 from nn_wtf.mnist_graph import MNISTGraph
 
@@ -117,7 +118,7 @@ def main(_):
 def perform_self_test():
     iterate_over_precisions(self_test=True)
     graph = run_final_training(
-        (32, 32, None), DATA_SETS, steps_between_checks=50, learning_rate=0.1, desired_precision=0.8
+        (32, 32, None), DATA_SETS, steps_between_checks=250, learning_rate=0.1, desired_precision=0.8
     )
     image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
     prediction = graph.get_predictor().predict(image_data)
@@ -138,7 +139,7 @@ def iterate_over_precisions(filename=None, self_test=False):
                 MNISTGraph, MNISTGraph.IMAGE_PIXELS, MNISTGraph.NUM_CLASSES, precision,
                 layer_sizes=layer_sizes, learning_rate=0.1, verbose=True
             )
-            results = optimizer.time_all_tested_geometries(DATA_SETS, max(FLAGS.max_steps, 200000))
+            results = optimizer.time_all_tested_geometries(DATA_SETS, min(FLAGS.max_steps, 200000))
             final_results[precision] = results
 
     if filename:
