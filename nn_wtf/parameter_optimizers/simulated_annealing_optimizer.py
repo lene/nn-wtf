@@ -10,8 +10,10 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
 
     def __init__(
             self, tested_network, start_training_precision, end_training_precision,
-            layer_sizes, start_size_difference, max_num_before_branching_out=20, learning_rate=None, verbose=False, batch_size=100
+            layer_sizes, start_size_difference, input_size, output_size, max_num_before_branching_out=20, learning_rate=None, verbose=False, batch_size=100
     ):
+        assert isinstance(input_size, int)
+        assert isinstance(output_size, int)
         super().__init__(tested_network, None, None, 0, learning_rate, verbose, batch_size)
         self.start_training_precision = start_training_precision
         self.end_training_precision = end_training_precision
@@ -19,6 +21,8 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
         self.start_size_difference = start_size_difference
         self.max_num_before_branching_out = max_num_before_branching_out
         self.learning_rate = learning_rate
+        self.input_size = input_size
+        self.output_size = output_size
         self.current_layer_sizes = list(layer_sizes)
 
     def best_parameters(self, data_sets, max_steps):
@@ -30,6 +34,7 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
             size_difference = self.start_size_difference//2**iteration_step
             print('layer sizes:', self.current_layer_sizes)
             timing_results = self.time_all_tested_geometries(data_sets, max_steps)
+            print(timing_results)
             timing_results = self.keep_only_best_results(timing_results)
             self.keep_only_best_geometries(timing_results)
             print('current layer sizes after:', self.current_layer_sizes)
@@ -45,11 +50,12 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
         return results[0]
 
     def add_neighbors_to_tested_geometries(self, size_difference, current_layer_sizes):
-        current_layer_sizes = sorted(list(set(
-            [neighbor
-             for old_layer_size in current_layer_sizes
-             for neighbor in self.tuple_neighbors(old_layer_size, size_difference)]
-        )))
+        neighbors = [
+            neighbor
+            for old_layer_size in current_layer_sizes
+            for neighbor in self.tuple_neighbors(old_layer_size, size_difference)
+        ]
+        current_layer_sizes = sorted(list(set(neighbors)))
         return current_layer_sizes
 
     def keep_only_best_geometries(self, results):
@@ -91,8 +97,6 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
         return precisions
 
     def time_all_tested_geometries(self, data_sets, max_steps):
-        self.input_size = data_sets.train.input.shape[0]
-        self.output_size = data_sets.train.labels.shape[0]
         results = []
         for geometry in self.current_layer_sizes:
             run_info = self.timed_run_training(

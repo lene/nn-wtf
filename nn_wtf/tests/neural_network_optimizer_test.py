@@ -55,6 +55,7 @@ class NeuralNetworkOptimizerTest(unittest.TestCase):
             start_training_precision=self.DESIRED_PRECISION,
             layer_sizes=layer_sizes,
             start_size_difference=start_size_difference,
+            input_size=2, output_size=2,
             max_num_before_branching_out=2,
             learning_rate=0.1,
             batch_size=self.train_data.num_examples,
