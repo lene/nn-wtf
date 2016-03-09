@@ -22,6 +22,7 @@ from nn_wtf.mnist_data_sets import MNISTDataSets
 from nn_wtf.mnist_graph import MNISTGraph
 from nn_wtf.parameter_optimizers.brute_force_optimizer import BruteForceOptimizer
 from nn_wtf.parameter_optimizers.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
+from nn_wtf.parameter_optimizers.simulated_annealing_optimizer import SimulatedAnnealingOptimizer
 
 DEFAULT_OPTIMIZER_PRECISIONS = (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992)
 
@@ -31,6 +32,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('self_test', False, 'Run self-test.')
 flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
+flags.DEFINE_float('simulated_annealing', 1, 'Test run simulated annealing geometry optimizer.')
 flags.DEFINE_float('training_precision', 0.0, 'Precision for geometry optimization runs.')
 flags.DEFINE_float('desired_precision', 0.95, 'Desired training precision.')
 flags.DEFINE_integer('max_steps', 2000, 'Number of steps to run trainer.')
@@ -98,6 +100,17 @@ def main(_):
         perform_self_test()
     elif FLAGS.list_precisions:
         iterate_over_precisions(filename="results.txt")
+    elif FLAGS.simulated_annealing:
+        print('testing simulated annealing optimizer')
+        optimizer = SimulatedAnnealingOptimizer(
+            MNISTGraph,
+            0.8, 0.99,
+            ((32, 32,), (64, 64), (96, 96), (128, 128)),
+            16,
+            MNISTGraph.IMAGE_PIXELS, MNISTGraph.NUM_CLASSES,
+            max_num_before_branching_out=20, learning_rate=0.1, verbose=False, batch_size=100
+        )
+        print(optimizer.best_parameters(DATA_SETS, min(FLAGS.max_steps, 200000)))
     else:
         with tf.Graph().as_default():
             graph = run_training()
