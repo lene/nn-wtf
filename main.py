@@ -16,12 +16,12 @@
 """Trains and Evaluates the MNIST network using a feed dictionary."""
 # pylint: disable=missing-docstring
 
-from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
-from nn_wtf.brute_force_optimizer import BruteForceOptimizer
+import tensorflow as tf
+
 from nn_wtf.mnist_data_sets import MNISTDataSets
 from nn_wtf.mnist_graph import MNISTGraph
-
-import tensorflow as tf
+from nn_wtf.parameter_optimizers.brute_force_optimizer import BruteForceOptimizer
+from nn_wtf.parameter_optimizers.neural_network_optimizer import NeuralNetworkOptimizer, timed_run
 
 DEFAULT_OPTIMIZER_PRECISIONS = (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992)
 

@@ -1,6 +1,6 @@
-from nn_wtf.neural_network_optimizer import NeuralNetworkOptimizer
-
 import pprint
+
+from nn_wtf.parameter_optimizers.neural_network_optimizer import NeuralNetworkOptimizer
 
 __author__ = 'Lene Preuss <lene.preuss@gmail.com>'
 
@@ -12,12 +12,15 @@ class BruteForceOptimizer(NeuralNetworkOptimizer):
         (32, 48, 64, 80, 96, 128),
         (None, 16, 32, 48)
     )
+#            self, tested_network, input_size, output_size, desired_training_precision,
 
     def __init__(
             self, tested_network, input_size, output_size, desired_training_precision,
             layer_sizes=None, learning_rate=None, verbose=False, batch_size=100
     ):
-        super().__init__(tested_network, input_size, output_size, desired_training_precision, verbose, batch_size)
+        super().__init__(
+            tested_network, input_size, output_size, desired_training_precision, verbose=verbose, batch_size=batch_size
+        )
         self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
         self.layer_sizes = self.DEFAULT_LAYER_SIZES if layer_sizes is None else layer_sizes
 
@@ -36,7 +39,6 @@ class BruteForceOptimizer(NeuralNetworkOptimizer):
                 NeuralNetworkOptimizer.OptimizationParameters(geometry, self.learning_rate),
                 max_steps=max_steps
             )
-            if self.verbose: print(run_info)
             results.append(run_info)
         results = sorted(results, key=lambda r: r.cpu_time)
         if self.verbose: pprint.pprint(results, width=100)
