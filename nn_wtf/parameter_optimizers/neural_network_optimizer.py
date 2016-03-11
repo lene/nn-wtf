@@ -31,7 +31,12 @@ class NeuralNetworkOptimizer:
             return str(self.__dict__())
 
         def __dict__(self):
-            return {'cpu_time': self.cpu_time, 'step': self.num_steps, 'layers': self.optimization_parameters.geometry}
+            attributes = {
+                'cpu_time': self.cpu_time, 'step': self.num_steps, 'layers': self.optimization_parameters.geometry
+            }
+            if hasattr(self, 'sort_parameter'):
+                attributes['sort_parameter'] = getattr(self, 'sort_parameter')
+            return attributes
 
     class OptimizationParameters:
 
@@ -63,6 +68,7 @@ class NeuralNetworkOptimizer:
         self.learning_rate = learning_rate if learning_rate else self.DEFAULT_LEARNING_RATE
         self.verbose = verbose
         self.batch_size = batch_size
+        self.steps_between_checks = 10
 
     def best_parameters(self, data_sets, max_steps):
         raise NotImplementedError
@@ -82,10 +88,10 @@ class NeuralNetworkOptimizer:
                 output_size=self.output_size
             )
             graph.init_trainer(learning_rate=optimization_parameters.learning_rate)
-            graph.set_session(verbose=self.verbose)
+            graph.set_session(verbose=bool(int(self.verbose)//2))
             graph.train(
                 data_sets, max_steps,
-                precision=self.desired_training_precision, steps_between_checks=50,
+                precision=self.desired_training_precision, steps_between_checks=self.steps_between_checks,
                 # batch_size=data_sets.train.num_examples
             )
         return graph

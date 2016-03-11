@@ -35,17 +35,14 @@ class NeuralNetworkOptimizerTest(unittest.TestCase):
         self._create_sa_optimizer()
 
     def test_simulated_annealing_optimizer_runs(self):
-        print('\n'+'*'*80)
         optimizer = self._create_sa_optimizer()
         optimizer.best_parameters(self.data_sets, self.MAX_STEPS)
 
     def test_simulated_annealing_optimizer_more_layers(self):
-        print('\n'+'*'*80)
         optimizer = self._create_sa_optimizer(layer_sizes=((2, 2), (4, 4), (6, 6), (8, 8)))
         optimizer.best_parameters(self.data_sets, self.MAX_STEPS)
 
     def test_simulated_annealing_optimizer_greater_difference(self):
-        print('\n'+'*'*80)
         optimizer = self._create_sa_optimizer(layer_sizes=((4, 4), (8, 8)), start_size_difference=2)
         optimizer.best_parameters(self.data_sets, self.MAX_STEPS)
 

@@ -24,6 +24,7 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
         self.input_size = input_size
         self.output_size = output_size
         self.current_layer_sizes = list(layer_sizes)
+        self.cpu_time_to_step_relevance = 5
 
     def best_parameters(self, data_sets, max_steps):
         self.batch_size = data_sets.train.num_examples
@@ -32,13 +33,17 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
         for iteration_step in range(self.num_iteration_steps()+2):
             self.desired_training_precision = precisions[iteration_step]
             size_difference = self.start_size_difference//2**iteration_step
-            print('layer sizes:', self.current_layer_sizes)
+            self.current_layer_sizes = self.add_neighbors_to_tested_geometries(size_difference, self.current_layer_sizes)
+            if self.verbose:
+                print(
+                    'precision: {:2.6f}, layer sizes: {}'.format(
+                        self.desired_training_precision, self.current_layer_sizes
+                    )
+                )
             timing_results = self.time_all_tested_geometries(data_sets, max_steps)
-            print(timing_results)
+            timing_results = self.throw_out_runs_that_didnt_reach_required_precision(timing_results)
             timing_results = self.keep_only_best_results(timing_results)
             self.keep_only_best_geometries(timing_results)
-            print('current layer sizes after:', self.current_layer_sizes)
-            self.current_layer_sizes = self.add_neighbors_to_tested_geometries(size_difference, self.current_layer_sizes)
 
         return self.prune_results(data_sets, max_steps, timing_results)
 
@@ -67,6 +72,10 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
 
     def keep_only_best_results(self, results):
         return results[0:self.num_geometries_before_starting_next_generation(results)]
+
+    # TODO
+    def throw_out_runs_that_didnt_reach_required_precision(self, results):
+        return [result for result in results if result.precision >= self.desired_training_precision]
 
     def num_geometries_before_starting_next_generation(self, results):
         return max(min(len(results)//2, self.max_num_before_branching_out), 1)
@@ -99,13 +108,15 @@ class SimulatedAnnealingOptimizer(NeuralNetworkOptimizer):
     def time_all_tested_geometries(self, data_sets, max_steps):
         results = []
         for geometry in self.current_layer_sizes:
+            if self.verbose: print('testing', geometry, end='\t', flush=True)
             run_info = self.timed_run_training(
                 data_sets,
                 NeuralNetworkOptimizer.OptimizationParameters(geometry, self.learning_rate),
                 max_steps=max_steps
             )
             if self.verbose: print(run_info)
+            run_info.sort_parameter = run_info.cpu_time*self.cpu_time_to_step_relevance+run_info.num_steps
             results.append(run_info)
-        results = sorted(results, key=lambda r: r.cpu_time)
+        results = sorted(results, key=lambda r: r.sort_parameter)
         if self.verbose: pprint(results, width=100)
         return results

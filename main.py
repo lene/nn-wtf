@@ -35,7 +35,7 @@ flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
 flags.DEFINE_float('simulated_annealing', 1, 'Test run simulated annealing geometry optimizer.')
 flags.DEFINE_float('training_precision', 0.0, 'Precision for geometry optimization runs.')
 flags.DEFINE_float('desired_precision', 0.95, 'Desired training precision.')
-flags.DEFINE_integer('max_steps', 2000, 'Number of steps to run trainer.')
+flags.DEFINE_integer('max_steps', 50000, 'Number of steps to run trainer.')
 flags.DEFINE_integer('hidden1', 128, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden2', 32, 'Number of units in hidden layer 2.')
 flags.DEFINE_integer('hidden3', None, 'Number of units in hidden layer 3.')
@@ -104,11 +104,11 @@ def main(_):
         print('testing simulated annealing optimizer')
         optimizer = SimulatedAnnealingOptimizer(
             MNISTGraph,
-            0.8, 0.99,
-            ((32, 32,), (64, 64), (96, 96), (128, 128)),
-            16,
+            0.85, 0.98,
+            ((64, 64), (128, 128), (64, 64, 64), (128, 128, 128)),
+            32,
             MNISTGraph.IMAGE_PIXELS, MNISTGraph.NUM_CLASSES,
-            max_num_before_branching_out=20, learning_rate=0.1, verbose=False, batch_size=100
+            max_num_before_branching_out=12, learning_rate=0.1, verbose=True, batch_size=100
         )
         print(optimizer.best_parameters(DATA_SETS, min(FLAGS.max_steps, 200000)))
     else:
