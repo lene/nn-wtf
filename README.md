@@ -4,21 +4,25 @@ nn-wtf aims at providing a convenience wrapper to Google's
 [TensorFlow](http://www.tensorflow.org/) machine learning library. 
 Its focus is on making neural networks easy to set up, train and use.
 
-The library is in pre-alpha right now and does not do anything useful yet.
+The library is in pre-alpha right now and does not do anything seriously useful 
+yet.
 
 ## Installation
+
+nn-wtf runs under Python3.4 and above.
 
 ### Dependencies
 
 You need to install TensorFlow manually. The installation process depends on 
 your system. Install the version of TensorFlow built for Python 3.4. 
 
-See https://www.tensorflow.org/versions/r0.7/get_started/os_setup.html#download-and-setup
+See 
+https://www.tensorflow.org/versions/r0.8/get_started/os_setup.html#download-and-setup
 for details.
 
 Example installation for Linux without GPU support:
 ```
-$ pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.6.0-cp34-none-linux_x86_64.whl
+$ pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.8.0rc0-cp34-cp34m-linux_x86_64.whl
 ```
 
 ### NN-WTF itself
