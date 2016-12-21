@@ -162,7 +162,7 @@ class Trainer:
         :return train_op: The Op for training.
       """
         # Add a scalar summary for the snapshot loss.
-        tf.scalar_summary(loss.op.name, loss)
+        tf.summary.scalar(loss.op.name, loss)
         # Create the gradient descent optimizer with the given learning rate.
         optimizer = self.optimizer_class(learning_rate, **self.kwargs)
         # Create a variable to track the global step.

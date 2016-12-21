@@ -96,6 +96,6 @@ def _initialize_biases(out_units_size):
 
 def _initialize_session():
     session = tf.Session()
-    init = tf.initialize_all_variables()
+    init = tf.global_variables_initializer()
     session.run(init)
     return session

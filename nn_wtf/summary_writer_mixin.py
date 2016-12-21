@@ -35,5 +35,5 @@ class SummaryWriterMixin(NeuralNetworkGraphMixin):
 
     def _setup_summaries(self):
         # Build the summary operation based on the TF collection of Summaries.
-        self.summary_op = tf.merge_all_summaries()
-        self.summary_writer = tf.train.SummaryWriter(self.train_dir, graph_def=self.session.graph_def)
+        self.summary_op = tf.summary.merge_all()
+        self.summary_writer = tf.summary.FileWriter(self.train_dir, graph=self.session.graph)

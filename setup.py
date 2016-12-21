@@ -13,7 +13,7 @@ except ImportError:
 
 setup(
     name='nn_wtf',
-    version='0.1.6',
+    version='0.1.7',
     description='Neural Networks Wrapper for TensorFlow',
     long_description=read_md('README.md'),
     classifiers=[
@@ -31,10 +31,8 @@ setup(
     package_data={'nn_wtf': ['data/*.raw']},
     install_requires=[
         # 'python>=3.4',
-        'numpy'
-    ],
-    dependency_links=[
-        'https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.7.0-py3-none-linux_x86_64.whl'
+        'numpy',
+        'tensorflow'
     ],
     include_package_data=True,
     zip_safe=False
