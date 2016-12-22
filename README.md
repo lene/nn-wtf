@@ -13,23 +13,44 @@ nn-wtf runs under Python3.4 and above.
 
 ### Dependencies
 
-You need to install TensorFlow manually. The installation process depends on 
-your system. Install the version of TensorFlow built for Python 3.4. 
-
-See 
-https://www.tensorflow.org/versions/r0.8/get_started/os_setup.html#download-and-setup
-for details.
-
-Example installation for Linux without GPU support:
+Depending on whether you want GPU support or not, you need to do either 
 ```
-$ pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.8.0rc0-cp34-cp34m-linux_x86_64.whl
+$ pip install tensorflow
 ```
+or
+```
+$ pip install tensorflow-gpu
+```
+
+See https://www.tensorflow.org/get_started/os_setup for details.
+
+The GPU version of TensorFlow needs the Nvidia CUDA libraries and the cuDNN Framework installed. See
+[TensorFlow-GPU dependencies](#tensorflow-gpu-dependencies) for instructions.
 
 ### NN-WTF itself
 Simple:
 ```
 $ pip install nn_wtf
 ```
+
+### TensorFlow-GPU dependencies
+The GPU version of TensorFlow needs the CUDA Toolkit 8.0 and cuDNN 5. There are instructions on how 
+ to do this at [Install CUDA (GPUs on Linux)](https://www.tensorflow.org/get_started/os_setup#optional_install_cuda_gpus_on_linux)
+
+A brief summary for Ubuntu Linux:
+* Download the CUDA 8 .deb from https://developer.nvidia.com/cuda-downloads and follow the 
+  installation instructions.
+* Download the cuDNN 5 archive from https://developer.nvidia.com/rdp/cudnn-download.
+  * You will have to register and set up an NVIDIA Developer account and apply for membership in the
+    Accelerated Computing Developer Program (https://developer.nvidia.com/rdp/cuda-registered-developer-program)
+    to download cuDNN.
+* Install cuDNN by extracting the downloaded archive and copying the extracted files to 
+  `/usr/local/cuda/include` and `/usr/local/cuda/lib64`.
+* Verify the installation by opening a Python interpreter and typing
+```python
+>>> import tensorflow as tf
+```
+If no errors occur, your installation is successful.
 
 ## Documentation
 
@@ -72,5 +93,9 @@ prediction = graph.get_predictor().predict(image_data)
 assert prediction == 7
 ```
 
+If you have cloned or downloaded the git repository at https://github.com/lene/nn-wtf, you can 
+also have a look at `main.py` in the root directory for some example usage.
+
 From there on, you are on your own for now. More functionality and documentation
 to come.
+
