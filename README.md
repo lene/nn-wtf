@@ -86,6 +86,7 @@ graph = MNISTGraph(
 )
 graph.train(data_sets, max_steps=5000, precision=0.95)
 
+# verify the training worked by testing if a handwritten number is recognized
 image_data = MNISTDataSets.read_one_image_from_url(
     'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
 )
