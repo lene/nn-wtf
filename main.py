@@ -30,9 +30,11 @@ DEFAULT_OPTIMIZER_PRECISIONS = (0.9, 0.925, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992)
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_float('self_test', False, 'Run self-test.')
+flags.DEFINE_boolean('train_once', True, 'Train a network once with predefined data.')
+flags.DEFINE_boolean('self_test', False, 'Run self-test.')
+flags.DEFINE_boolean('simulated_annealing', False, 'Test run simulated annealing geometry optimizer.')
+flags.DEFINE_boolean('list_precisions', False, 'Call optimizer for several precisions.')
 flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
-flags.DEFINE_float('simulated_annealing', 1, 'Test run simulated annealing geometry optimizer.')
 flags.DEFINE_float('training_precision', 0.0, 'Precision for geometry optimization runs.')
 flags.DEFINE_float('desired_precision', 0.95, 'Desired training precision.')
 flags.DEFINE_integer('max_steps', 50000, 'Number of steps to run trainer.')
@@ -41,7 +43,6 @@ flags.DEFINE_integer('hidden2', 32, 'Number of units in hidden layer 2.')
 flags.DEFINE_integer('hidden3', None, 'Number of units in hidden layer 3.')
 flags.DEFINE_integer('batch_size', 100, 'Batch size. Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', '.nn_wtf-data', 'Directory to put the training data.')
-flags.DEFINE_boolean('list_precisions', False, 'If true, call optimizer for several precisions.')
 
 
 def run_training():
@@ -101,31 +102,41 @@ def main(_):
     elif FLAGS.list_precisions:
         iterate_over_precisions(filename="results.txt")
     elif FLAGS.simulated_annealing:
-        print('testing simulated annealing optimizer')
-        optimizer = SimulatedAnnealingOptimizer(
-            MNISTGraph,
-            0.85, 0.98,
-            ((64, 64), (128, 128), (64, 64, 64), (128, 128, 128)),
-            32,
-            MNISTGraph.IMAGE_PIXELS, MNISTGraph.NUM_CLASSES,
-            max_num_before_branching_out=12, learning_rate=0.1, verbose=True, batch_size=100
-        )
-        print(optimizer.best_parameters(DATA_SETS, min(FLAGS.max_steps, 200000)))
+        example_optimizer()
     else:
-        with tf.Graph().as_default():
-            graph = run_training()
-            image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
-            print('actual number: 7, prediction:', graph.get_predictor().predict(image_data))
-            print('predicted probabilities:', graph.get_predictor().prediction_probabilities(image_data))
-            image_data = MNISTDataSets.read_one_image_from_url(
-                'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
-            )
+        train_once()
+
+
+def train_once():
+    with tf.Graph().as_default():
+        graph = run_training()
+        image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/7_from_test_set.raw')
+        print('actual number: 7, prediction:', graph.get_predictor().predict(image_data))
+        print('predicted probabilities:',
+              graph.get_predictor().prediction_probabilities(image_data))
+        image_data = MNISTDataSets.read_one_image_from_url(
+            'http://github.com/lene/nn-wtf/blob/master/nn_wtf/data/7_from_test_set.raw?raw=true'
+        )
+        prediction = graph.get_predictor().predict(image_data)
+        print('actual number: 7, prediction:', prediction)
+        for i in range(10):
+            image_data = MNISTDataSets.read_one_image_from_file(
+                'nn_wtf/data/handwritten_test_data/' + str(i) + '.raw')
             prediction = graph.get_predictor().predict(image_data)
-            print('actual number: 7, prediction:', prediction)
-            for i in range(10):
-                image_data = MNISTDataSets.read_one_image_from_file('nn_wtf/data/handwritten_test_data/'+str(i)+'.raw')
-                prediction = graph.get_predictor().predict(image_data)
-                print(i, prediction)
+            print(i, prediction)
+
+
+def example_optimizer():
+    print('testing simulated annealing optimizer')
+    optimizer = SimulatedAnnealingOptimizer(
+        MNISTGraph,
+        0.85, 0.98,
+        ((64, 64), (128, 128), (64, 64, 64), (128, 128, 128)),
+        32,
+        MNISTGraph.IMAGE_PIXELS, MNISTGraph.NUM_CLASSES,
+        max_num_before_branching_out=12, learning_rate=0.1, verbose=True, batch_size=100
+    )
+    print(optimizer.best_parameters(DATA_SETS, min(FLAGS.max_steps, 200000)))
 
 
 def perform_self_test():

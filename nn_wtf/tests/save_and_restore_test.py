@@ -44,14 +44,18 @@ class SaveAndRestoreTest(unittest.TestCase):
         self._add_savefiles_to_list(saved)
 
     def test_prediction_with_trained_graph(self):
-        savefile = self._save_trained_graph()
+        self._save_trained_graph()
 
         new_graph = init_graph(SavableNetwork(), session=tf.Session())
         for v in tf.global_variables():
-            self.assertFalse(self.is_ndarray_equal(v.eval(new_graph.session), self.variables[v.op.name]))
-        new_graph.restore()#savefile)
+            self.assertFalse(
+                self.is_ndarray_equal(v.eval(new_graph.session), self.variables[v.op.name])
+            )
+        new_graph.restore()
         for v in tf.global_variables():
-            self.assertTrue(self.is_ndarray_equal(v.eval(new_graph.session), self.variables[v.op.name]))
+            self.assertTrue(
+                self.is_ndarray_equal(v.eval(new_graph.session), self.variables[v.op.name])
+            )
 
     def _save_trained_graph(self):
         tf.reset_default_graph()
